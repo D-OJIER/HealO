@@ -24,3 +24,61 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.btn-ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 10%, transparent 45%);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+.btn-ripple:active::after {
+  opacity: 1;
+  transform: scale(1.4);
+  transition: 0s;
+}
+
+.healoz-marker-normal,
+.healoz-marker-selected {
+  background: transparent;
+  border: 0;
+}
+
+.healoz-marker-dot {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #2563eb;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+
+.healoz-marker-selected .healoz-marker-dot {
+  width: 20px;
+  height: 20px;
+  background: #0ea5e9;
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.6);
+  animation: pulse-marker 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-marker {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
