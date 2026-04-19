@@ -1,0 +1,628 @@
+{
+  "auth_users": [
+    {
+      "id": "user-patient-riya",
+      "email": "riya@testclinic.local",
+      "password_hash": "dcfcb876c8b058ee0f212ef51208ba587ccded0bca9d2b6a2c0b02bb0de1a41e",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-patient-aman",
+      "email": "aman@testclinic.local",
+      "password_hash": "dcfcb876c8b058ee0f212ef51208ba587ccded0bca9d2b6a2c0b02bb0de1a41e",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-patient-sana",
+      "email": "sana@testclinic.local",
+      "password_hash": "dcfcb876c8b058ee0f212ef51208ba587ccded0bca9d2b6a2c0b02bb0de1a41e",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-doctor-maya",
+      "email": "maya@doctor.local",
+      "password_hash": "dcfcb876c8b058ee0f212ef51208ba587ccded0bca9d2b6a2c0b02bb0de1a41e",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-doctor-arjun",
+      "email": "arjun@doctor.local",
+      "password_hash": "dcfcb876c8b058ee0f212ef51208ba587ccded0bca9d2b6a2c0b02bb0de1a41e",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-doctor-nisha",
+      "email": "nisha@doctor.local",
+      "password_hash": "dcfcb876c8b058ee0f212ef51208ba587ccded0bca9d2b6a2c0b02bb0de1a41e",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "user-patient-riya",
+      "name": "Riya Sharma",
+      "email": "riya@testclinic.local",
+      "role": "patient",
+      "phone": "9876543210",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-patient-aman",
+      "name": "Aman Verma",
+      "email": "aman@testclinic.local",
+      "role": "patient",
+      "phone": "9876500011",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-patient-sana",
+      "name": "Sana Iqbal",
+      "email": "sana@testclinic.local",
+      "role": "patient",
+      "phone": "9876500022",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-doctor-maya",
+      "name": "Dr. Maya Shah",
+      "email": "maya@doctor.local",
+      "role": "doctor",
+      "phone": "9000001001",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-doctor-arjun",
+      "name": "Dr. Arjun Menon",
+      "email": "arjun@doctor.local",
+      "role": "doctor",
+      "phone": "9000002002",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "user-doctor-nisha",
+      "name": "Dr. Nisha Rao",
+      "email": "nisha@doctor.local",
+      "role": "doctor",
+      "phone": "9000003003",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    }
+  ],
+  "registered_doctors": [
+    {
+      "id": "regdoc-maya",
+      "name": "Dr. Maya Shah",
+      "registration_number_hash": "5bd566013e2e4be15bd7bbb03563c6130e2dd90a32b2a80e64d34862875ccc32",
+      "specialty": "Cardiology",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "regdoc-arjun",
+      "name": "Dr. Arjun Menon",
+      "registration_number_hash": "5705e51d37aee834503f177d251e2feb8efed2bbaa07c875f6da7e34eb75dcf5",
+      "specialty": "Dermatology",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "regdoc-nisha",
+      "name": "Dr. Nisha Rao",
+      "registration_number_hash": "2bcc95dabe76b8dcf628fd6cb27099a4b9fe29c16f7c40139298b06b30b74db3",
+      "specialty": "General Medicine",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    }
+  ],
+  "doctors": [
+    {
+      "id": "doctor-maya",
+      "user_id": "user-doctor-maya",
+      "specialty": "Cardiology",
+      "verification_status": "verified",
+      "rating": 4.8,
+      "location_lat": 13.0827,
+      "location_lng": 80.2707,
+      "location_label": "HeartCare Clinic",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "doctor-arjun",
+      "user_id": "user-doctor-arjun",
+      "specialty": "Dermatology",
+      "verification_status": "verified",
+      "rating": 4.6,
+      "location_lat": 13.0604,
+      "location_lng": 80.2496,
+      "location_label": "SkinFirst Center",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "doctor-nisha",
+      "user_id": "user-doctor-nisha",
+      "specialty": "General Medicine",
+      "verification_status": "verified",
+      "rating": 4.7,
+      "location_lat": 13.0487,
+      "location_lng": 80.2122,
+      "location_label": "WellSpring Family Clinic",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    }
+  ],
+  "clinics": [
+    {
+      "id": "clinic-heartcare",
+      "name": "HeartCare Clinic",
+      "address": "12 Residency Road, Chennai",
+      "location_lat": 13.0827,
+      "location_lng": 80.2707,
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "clinic-skinfirst",
+      "name": "SkinFirst Center",
+      "address": "44 MG Road, Chennai",
+      "location_lat": 13.0604,
+      "location_lng": 80.2496,
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "clinic-wellspring",
+      "name": "WellSpring Family Clinic",
+      "address": "7 Anna Nagar Main Road, Chennai",
+      "location_lat": 13.0487,
+      "location_lng": 80.2122,
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "clinic-heartcare-south",
+      "name": "HeartCare South Wing",
+      "address": "18 T Nagar High Road, Chennai",
+      "location_lat": 13.0418,
+      "location_lng": 80.2337,
+      "created_at": "2026-04-19T15:57:49.739Z"
+    },
+    {
+      "id": "clinic-skinfirst-velachery",
+      "name": "SkinFirst Velachery",
+      "address": "21 Velachery Main Road, Chennai",
+      "location_lat": 12.9791,
+      "location_lng": 80.2212,
+      "created_at": "2026-04-19T15:57:49.739Z"
+    }
+  ],
+  "doctor_clinics": [
+    {
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare"
+    },
+    {
+      "doctor_id": "doctor-arjun",
+      "clinic_id": "clinic-skinfirst"
+    },
+    {
+      "doctor_id": "doctor-nisha",
+      "clinic_id": "clinic-wellspring"
+    },
+    {
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare-south"
+    },
+    {
+      "doctor_id": "doctor-arjun",
+      "clinic_id": "clinic-skinfirst-velachery"
+    }
+  ],
+  "doctor_slots": [
+    {
+      "id": "slot-heart-1",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare",
+      "start_time": "2026-04-20T15:41:14.305Z",
+      "end_time": "2026-04-20T16:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-heart-2",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare",
+      "start_time": "2026-04-20T17:41:14.305Z",
+      "end_time": "2026-04-20T18:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-heart-3",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare",
+      "start_time": "2026-04-21T17:41:14.305Z",
+      "end_time": "2026-04-21T18:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-skin-1",
+      "doctor_id": "doctor-arjun",
+      "clinic_id": "clinic-skinfirst",
+      "start_time": "2026-04-20T21:41:14.305Z",
+      "end_time": "2026-04-20T22:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-skin-2",
+      "doctor_id": "doctor-arjun",
+      "clinic_id": "clinic-skinfirst",
+      "start_time": "2026-04-21T21:41:14.305Z",
+      "end_time": "2026-04-21T22:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-skin-3",
+      "doctor_id": "doctor-arjun",
+      "clinic_id": "clinic-skinfirst",
+      "start_time": "2026-04-22T21:41:14.305Z",
+      "end_time": "2026-04-22T22:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-med-1",
+      "doctor_id": "doctor-nisha",
+      "clinic_id": "clinic-wellspring",
+      "start_time": "2026-04-20T13:41:14.305Z",
+      "end_time": "2026-04-20T14:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-med-2",
+      "doctor_id": "doctor-nisha",
+      "clinic_id": "clinic-wellspring",
+      "start_time": "2026-04-21T13:41:14.305Z",
+      "end_time": "2026-04-21T14:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-med-3",
+      "doctor_id": "doctor-nisha",
+      "clinic_id": "clinic-wellspring",
+      "start_time": "2026-04-22T13:41:14.305Z",
+      "end_time": "2026-04-22T14:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-past-1",
+      "doctor_id": "doctor-nisha",
+      "clinic_id": "clinic-wellspring",
+      "start_time": "2026-04-14T15:41:14.305Z",
+      "end_time": "2026-04-14T16:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-past-2",
+      "doctor_id": "doctor-arjun",
+      "clinic_id": "clinic-skinfirst",
+      "start_time": "2026-04-15T15:41:14.305Z",
+      "end_time": "2026-04-15T16:01:14.305Z",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "slot-8af730b2-c336-41bf-9a4a-f258448bcac1",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare",
+      "start_time": "2026-04-20T03:30:00.000Z",
+      "end_time": "2026-04-20T03:50:00.000Z",
+      "created_at": "2026-04-19T15:43:38.853Z"
+    },
+    {
+      "id": "slot-ff3c9f71-4934-4c99-b158-3279451100ae",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare",
+      "start_time": "2026-04-20T04:00:00.000Z",
+      "end_time": "2026-04-20T04:20:00.000Z",
+      "created_at": "2026-04-19T15:43:38.853Z"
+    },
+    {
+      "id": "slot-6c23964e-571d-4627-8d62-29dba79fff52",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare",
+      "start_time": "2026-04-20T04:30:00.000Z",
+      "end_time": "2026-04-20T04:50:00.000Z",
+      "created_at": "2026-04-19T15:43:38.853Z"
+    },
+    {
+      "id": "slot-e668cb98-aac8-458a-aeab-d35cfd1311e7",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare",
+      "start_time": "2026-04-20T05:00:00.000Z",
+      "end_time": "2026-04-20T05:20:00.000Z",
+      "created_at": "2026-04-19T15:43:38.853Z"
+    },
+    {
+      "id": "slot-2a12fa62-2f48-4ba1-afb4-3f6c18d2706e",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare",
+      "start_time": "2026-04-20T05:30:00.000Z",
+      "end_time": "2026-04-20T05:50:00.000Z",
+      "created_at": "2026-04-19T15:43:38.853Z"
+    },
+    {
+      "id": "slot-10fc063f-84df-4ec1-8828-b531cd4b112b",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare",
+      "start_time": "2026-04-20T06:00:00.000Z",
+      "end_time": "2026-04-20T06:20:00.000Z",
+      "created_at": "2026-04-19T15:43:38.853Z"
+    },
+    {
+      "id": "slot-heart-south-1",
+      "doctor_id": "doctor-maya",
+      "clinic_id": "clinic-heartcare-south",
+      "start_time": "2026-04-20T19:57:49.739Z",
+      "end_time": "2026-04-20T20:17:49.739Z",
+      "created_at": "2026-04-19T15:57:49.739Z"
+    },
+    {
+      "id": "slot-skin-vel-1",
+      "doctor_id": "doctor-arjun",
+      "clinic_id": "clinic-skinfirst-velachery",
+      "start_time": "2026-04-20T23:57:49.739Z",
+      "end_time": "2026-04-21T00:17:49.739Z",
+      "created_at": "2026-04-19T15:57:49.739Z"
+    }
+  ],
+  "symptoms": [
+    {
+      "id": "symptom-riya-1",
+      "patient_id": "user-patient-riya",
+      "description": "94b7ef3970378b82cbacd4bf:9bd0d594204a3afef57dad5f90f10628:6e110c8cd568fa2c6297afc5ec9e8654ea43f1fde4aa850323969b7fb094ad1290c0ebfd645de861954918c721e9",
+      "created_at": "2026-04-14T15:41:14.305Z"
+    },
+    {
+      "id": "symptom-aman-1",
+      "patient_id": "user-patient-aman",
+      "description": "af137f16341bf1bd5ccffde7:4765baec2d045db77de3f578527b298f:e276b527dfc6ffbe131bed46652273e524fa1ffca8b52be71e9dc214ab738756246c6fb4bacbf81c",
+      "created_at": "2026-04-15T15:41:14.305Z"
+    },
+    {
+      "id": "symptom-sana-1",
+      "patient_id": "user-patient-sana",
+      "description": "9dc994b62f929fb7b571e8bd:bfa5a8664b582af73553550734b47e53:716781947d900c5db88e61ede6945a4839b87ab3fcf0cdaeca3148983d54bb4a92bd87c3bc59cfa510de",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "symptom-bd8a9c6e-8798-42c9-a262-84737b27de09",
+      "patient_id": "user-patient-riya",
+      "description": "2a729a7c78f6c0f27a65169d:b1748a9d1d00ea86ba545317c3c6bddf:628cdbda",
+      "created_at": "2026-04-19T15:41:29.232Z"
+    },
+    {
+      "id": "symptom-b982d842-99c1-43b4-a0b3-c28c42b4a322",
+      "patient_id": "user-patient-riya",
+      "description": "d8deb1a36fb3c50ffca14362:60d972fa8080ad9da560fb4cb94643e3:ba0448e8",
+      "created_at": "2026-04-19T15:42:00.146Z"
+    },
+    {
+      "id": "symptom-c430fb40-78f5-471b-9dca-d4ea5a0d7daf",
+      "patient_id": "user-patient-riya",
+      "description": "b13d5a36514fca70e60f8c10:9663779bfbd09ba6b862e52aa712c6f4:c1418d1c",
+      "created_at": "2026-04-19T15:42:04.729Z"
+    },
+    {
+      "id": "symptom-d5469be9-6882-4a99-831a-082af43df36f",
+      "patient_id": "user-patient-riya",
+      "description": "e8601a8231be64c696fe7bc6:b0bc56f8ca9a8eb22e29562416bf8688:8b5e1ebe",
+      "created_at": "2026-04-19T15:42:05.275Z"
+    },
+    {
+      "id": "symptom-8c3fed18-b782-4250-9888-be003d6f64ab",
+      "patient_id": "user-patient-riya",
+      "description": "c5a1ffe4d0d8a205413a133e:a6dc4964f918595f38a085a22fc794e0:8ac48fde",
+      "created_at": "2026-04-19T15:42:10.240Z"
+    },
+    {
+      "id": "symptom-70e918a3-ffc8-45dd-a582-3236c828656e",
+      "patient_id": "user-patient-riya",
+      "description": "30322a0706baaffdbeb6466b:73af2225150a69e97a061b4ae897e1b7:a27919bebfeeb2",
+      "created_at": "2026-04-19T15:42:23.360Z"
+    },
+    {
+      "id": "symptom-539580e7-5032-4fc3-935d-fd14efd8c135",
+      "patient_id": "user-patient-riya",
+      "description": "16bd512ee0172bdc1393d3ce:bc1fa5de3057260880df017c2519b4db:3f3a76f28cfe7d",
+      "created_at": "2026-04-19T15:42:24.195Z"
+    },
+    {
+      "id": "symptom-8b41aee8-604f-4f82-beb7-a2caccebd400",
+      "patient_id": "user-patient-riya",
+      "description": "1da6df1b7a8590a9814c0329:570694ffef21d20c1d3cf0117b39827d:2d95a64dc772d7",
+      "created_at": "2026-04-19T15:42:24.636Z"
+    },
+    {
+      "id": "symptom-e48e9a59-f953-466f-bc63-e2445b2ae230",
+      "patient_id": "user-patient-riya",
+      "description": "46a7a8d8d1c9347c562fb7a1:9f2e0977f4b865002408f2a8f97d0770:0c678648e46102",
+      "created_at": "2026-04-19T15:42:24.800Z"
+    },
+    {
+      "id": "symptom-76bdeb62-e642-4248-b846-41a1e7ba7cc5",
+      "patient_id": "user-patient-riya",
+      "description": "006a3e97d48c55cf4c096842:383b270100f34d0364c2bd86401b4bcb:94f63ce438401e",
+      "created_at": "2026-04-19T15:42:24.947Z"
+    },
+    {
+      "id": "symptom-c3e2e86e-298c-4af7-93c3-d50057d8ade6",
+      "patient_id": "user-patient-riya",
+      "description": "167c193c4000893dc26f31cc:cae36f1354899517788e790f3c72cc46:6b0f8b03",
+      "created_at": "2026-04-19T15:42:29.676Z"
+    },
+    {
+      "id": "symptom-a7be9e7e-53de-48fc-9a14-0d0c8251d7b6",
+      "patient_id": "user-patient-riya",
+      "description": "fa01a5c7d318f9ed9a590d17:063e8a5eca0bc548329d81bb1173a326:588d1802",
+      "created_at": "2026-04-19T15:42:30.152Z"
+    },
+    {
+      "id": "symptom-6ae0e786-58f3-4f78-af49-b4b9213e3aa2",
+      "patient_id": "user-patient-sana",
+      "description": "cfb0286cb072c17316c4c828:589cc9c84ce057cc823d60655cc4f70e:afa5bc84f4",
+      "created_at": "2026-04-19T15:58:28.952Z"
+    },
+    {
+      "id": "symptom-90ac6de4-daa0-4675-b342-56e4a5113589",
+      "patient_id": "user-patient-sana",
+      "description": "4a542d93d1f75b0933418241:742c26e7c738f988ce7a5c44ab25ea45:fcc7a8c526c11da139",
+      "created_at": "2026-04-19T16:00:41.624Z"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "appt-riya-1",
+      "patient_id": "user-patient-riya",
+      "doctor_id": "doctor-nisha",
+      "slot_id": "slot-past-1",
+      "clinic_id": "clinic-wellspring",
+      "symptom_id": "symptom-riya-1",
+      "status": "completed",
+      "created_at": "2026-04-14T15:41:14.305Z",
+      "patient_arrived_at": null
+    },
+    {
+      "id": "appt-aman-1",
+      "patient_id": "user-patient-aman",
+      "doctor_id": "doctor-arjun",
+      "slot_id": "slot-past-2",
+      "clinic_id": "clinic-skinfirst",
+      "symptom_id": "symptom-aman-1",
+      "status": "completed",
+      "created_at": "2026-04-15T15:41:14.305Z",
+      "patient_arrived_at": "2026-04-19T16:02:39.651Z"
+    },
+    {
+      "id": "appt-sana-1",
+      "patient_id": "user-patient-sana",
+      "doctor_id": "doctor-maya",
+      "slot_id": "slot-heart-1",
+      "clinic_id": "clinic-heartcare",
+      "symptom_id": "symptom-sana-1",
+      "status": "pending",
+      "created_at": "2026-04-19T15:41:14.305Z",
+      "patient_arrived_at": null
+    },
+    {
+      "id": "appointment-b73cad4c-d84b-49fd-83be-88bb6bb523ab",
+      "patient_id": "user-patient-riya",
+      "doctor_id": "doctor-nisha",
+      "slot_id": "slot-med-1",
+      "clinic_id": "clinic-wellspring",
+      "symptom_id": "symptom-bd8a9c6e-8798-42c9-a262-84737b27de09",
+      "status": "pending",
+      "created_at": "2026-04-19T15:41:50.531Z",
+      "patient_arrived_at": null
+    },
+    {
+      "id": "appointment-afb127ae-24ed-4a13-87bb-c1ab2d21b48d",
+      "patient_id": "user-patient-sana",
+      "doctor_id": "doctor-maya",
+      "slot_id": "slot-8af730b2-c336-41bf-9a4a-f258448bcac1",
+      "clinic_id": "clinic-heartcare",
+      "symptom_id": "symptom-6ae0e786-58f3-4f78-af49-b4b9213e3aa2",
+      "status": "pending",
+      "patient_arrived_at": null,
+      "created_at": "2026-04-19T15:59:14.210Z"
+    },
+    {
+      "id": "appointment-12748cee-bc60-43b2-a40e-6596a88426bc",
+      "patient_id": "user-patient-sana",
+      "doctor_id": "doctor-arjun",
+      "slot_id": "slot-skin-2",
+      "clinic_id": "clinic-skinfirst",
+      "symptom_id": "symptom-90ac6de4-daa0-4675-b342-56e4a5113589",
+      "status": "accepted",
+      "patient_arrived_at": "2026-04-19T16:02:29.465Z",
+      "created_at": "2026-04-19T16:01:20.819Z"
+    }
+  ],
+  "prescriptions": [
+    {
+      "id": "rx-riya-1",
+      "appointment_id": "appt-riya-1",
+      "doctor_id": "doctor-nisha",
+      "patient_id": "user-patient-riya",
+      "diagnosis": "66a99e14828f3473519a66ba:a6d4e51742ca4c331b82bc4245ec2cba:275e4a0e2af3e1a1fbeb463a840f3153df246743bb2be33f78ad94d9ba61a5f2e4",
+      "medications": {
+        "ciphertext": "c788c59f641c0177a067e629:b6dd7d181482d493728915acc50cb241:9cc17abfb27da8769ce512eb7ac371b326b433292392baa495e7e52d5227f23266841165ada8ec65571c10b3f7c1a039352e393069ceb0203ffbe032ff4e677e64ee121c021c3b42ab6c13487c0f12eea2d3d8e3f98fd774245cc7c1aa71cdd0a0fd591a539f16aa4d081e47932f92ef473515789d58933684db9f4fc501cb7b7ca617095beb8fd10e94e58d95"
+      },
+      "doctor_notes": "b36e7b844e261e934678002e:091f3fa7e5c7067da39d2304c1087021:c96372d0d0dacc6937aa0ffa7c1e110b4b186578b452f0cbd1f29ac8ab7dc348f7d2409db81da387dde77c3fe03c92a050",
+      "created_at": "2026-04-14T16:01:14.305Z"
+    },
+    {
+      "id": "rx-aman-1",
+      "appointment_id": "appt-aman-1",
+      "doctor_id": "doctor-arjun",
+      "patient_id": "user-patient-aman",
+      "diagnosis": "e71ce76bc8c758091647636b:fd45b272ab44b6a94cb4dce0c03766b8:e88a4ce83fb2ada52f0d49c2d4fd6f1e54a7b22e6ba217120ea7ae",
+      "medications": {
+        "ciphertext": "9750cf9e915fa4076e98ae4d:819e79d9552f05810d9ac22a19c710af:78e72ceb199ed618902a91d307375343f53aeb4045fab2330204dc7e0d171d4f6d7019f24dc9c2adcede6d14cafeb65e89d4089316fb29dcbf14d6d224acd5159392ed3e6fc0bc658c5a612586c3adff86b720d92a60a781aad7c320f964d92aeb119ad3d6b0241e998f5a17103c6630582df64727c1425ead88e339ff3d0ab446"
+      },
+      "doctor_notes": "9b00cce10f1df047c04b52cd:8445bd44ad788d0143b285f3787cf240:99ed84a64429be81e4d6bc5be8194a833866271d4138c2d3775965ef0424a22ebb349d29db2c518a310846434defd8e487a0189cbae7",
+      "created_at": "2026-04-15T16:01:14.305Z"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "review-1",
+      "doctor_id": "doctor-maya",
+      "patient_id": "user-patient-sana",
+      "rating": 5,
+      "comment": "Very reassuring consultation.",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "review-2",
+      "doctor_id": "doctor-maya",
+      "patient_id": "user-patient-riya",
+      "rating": 4,
+      "comment": "Explained preventive steps well.",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "review-3",
+      "doctor_id": "doctor-arjun",
+      "patient_id": "user-patient-aman",
+      "rating": 5,
+      "comment": "Quick diagnosis and helpful treatment.",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "review-4",
+      "doctor_id": "doctor-nisha",
+      "patient_id": "user-patient-riya",
+      "rating": 5,
+      "comment": "Great for family medicine follow-up.",
+      "created_at": "2026-04-19T15:41:14.305Z"
+    }
+  ],
+  "medication_reminders": [
+    {
+      "id": "reminder-riya-1",
+      "patient_id": "user-patient-riya",
+      "medication_name": "Paracetamol (650mg)",
+      "schedule": "08:00,14:00,21:00",
+      "enabled": true,
+      "created_at": "2026-04-19T15:41:14.305Z"
+    },
+    {
+      "id": "reminder-aman-1",
+      "patient_id": "user-patient-aman",
+      "medication_name": "Cetirizine (10mg)",
+      "schedule": "22:00",
+      "enabled": true,
+      "created_at": "2026-04-19T15:41:14.305Z"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "session-776a1da9-ed2a-460d-90b8-96b29e7b4614",
+      "user_id": "user-patient-sana",
+      "created_at": "2026-04-19T16:00:36.140Z"
+    },
+    {
+      "id": "session-9512dd5c-6c99-4cfe-9457-4a95c9d02d09",
+      "user_id": "user-doctor-arjun",
+      "created_at": "2026-04-19T16:01:44.277Z"
+    }
+  ]
+}
