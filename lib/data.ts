@@ -1,7 +1,7 @@
 import { analyzeSymptomsWithAi, decryptMedicationPayload, explainDoctorRecommendation, summarizePatientHistoryWithAi } from "@/lib/ai";
 import { directionsUrl, haversineDistanceKm, mapEmbedUrl } from "@/lib/geo";
 import { decryptPHI, maskPhi, tryDecryptPHI } from "@/lib/security";
-import type { Coordinates, DoctorRecommendation, LocalDatabase, MedicationItem } from "@/lib/types";
+import type { Coordinates, DoctorRecommendation, LocalDatabase, MedicationItem, PrescriptionSuggestion, PrescriptionSuggestionItem } from "@/lib/types";
 
 const MINIMUM_REVIEW_THRESHOLD = 5;
 type LooseRecord = Record<string, unknown>;
@@ -27,6 +27,24 @@ const DOCTOR_METADATA: Record<
     languages: ["English", "Tamil", "Hindi"],
     experienceYears: 11,
     bio: "Family physician handling fever, infections, follow-up care, and first-line triage."
+  },
+  "doctor-vivek": {
+    consultationFee: 850,
+    languages: ["English", "Tamil", "Hindi"],
+    experienceYears: 14,
+    bio: "Orthopedic specialist focused on sports injuries, joint pain, and rehab planning."
+  },
+  "doctor-farah": {
+    consultationFee: 650,
+    languages: ["English", "Tamil", "Urdu"],
+    experienceYears: 10,
+    bio: "Pediatrician supporting fever workups, preventive care, and parent-friendly treatment plans."
+  },
+  "doctor-karthik": {
+    consultationFee: 700,
+    languages: ["English", "Tamil"],
+    experienceYears: 12,
+    bio: "ENT consultant for sinus issues, throat infections, allergy-linked congestion, and hearing concerns."
   }
 };
 
@@ -256,4 +274,198 @@ export function decryptPrescriptionFields(input: {
 
 export function decryptStoredSymptom(value: string | null) {
   return value ? decryptPHI(value) : "";
+}
+
+type MedicationTemplate = {
+  name: string;
+  dosage: string;
+  schedule: string;
+  reason: string;
+};
+
+function normalizeText(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function buildMedicationLine(item: MedicationTemplate | PrescriptionSuggestionItem) {
+  return `${item.name} | ${item.dosage} | ${item.schedule}`;
+}
+
+function matchesAllergy(medicationName: string, allergen: string) {
+  const medication = normalizeText(medicationName);
+  const allergy = normalizeText(allergen);
+
+  if (!allergy) {
+    return false;
+  }
+
+  return medication.includes(allergy) || allergy.includes(medication);
+}
+
+export function findMedicationAllergyConflicts(
+  db: LocalDatabase,
+  patientId: string,
+  medications: MedicationItem[]
+) {
+  const allergies = db.allergies.filter((row) => row.patient_id === patientId);
+
+  return medications.flatMap((medication) => {
+    const allergy = allergies.find((item) => matchesAllergy(medication.name, item.allergen));
+    if (!allergy) {
+      return [];
+    }
+
+    return [{
+      medicationName: medication.name,
+      allergen: allergy.allergen,
+      reaction: allergy.reaction,
+      severity: allergy.severity
+    }];
+  });
+}
+
+function getTemplateBundle(symptoms: string, specialty?: string | null) {
+  const text = normalizeText(`${symptoms} ${specialty || ""}`);
+
+  if (/rash|itch|allerg|hives|dermat/.test(text)) {
+    return {
+      diagnosisHint: "Allergic or inflammatory skin flare",
+      rationale: "Skin and allergy symptom patterns align with an antihistamine plus topical relief plan.",
+      templates: [
+        { name: "Cetirizine", dosage: "10mg", schedule: "22:00", reason: "Helps reduce allergy-driven itching." },
+        { name: "Calamine Lotion", dosage: "Topical", schedule: "08:00,20:00", reason: "Useful for symptomatic skin relief." }
+      ] satisfies MedicationTemplate[],
+      cautions: ["Confirm lesion pattern and infection risk before prescribing steroid-containing topicals."]
+    };
+  }
+
+  if (/knee|joint|sprain|back pain|ankle|ortho|pain/.test(text)) {
+    return {
+      diagnosisHint: "Musculoskeletal pain or sprain pattern",
+      rationale: "Pain-focused symptoms align with short-course analgesia and supportive care reminders.",
+      templates: [
+        { name: "Ibuprofen", dosage: "400mg", schedule: "09:00,21:00", reason: "Common first-line option for inflammatory pain if tolerated." },
+        { name: "Cold Pack", dosage: "15 min", schedule: "08:00,16:00,22:00", reason: "Supports swelling and pain control." }
+      ] satisfies MedicationTemplate[],
+      cautions: ["Avoid NSAID suggestions if there is gastric, kidney, or NSAID allergy history."]
+    };
+  }
+
+  if (/sinus|throat|ear|ent|blocked nose|hearing|cough|cold/.test(text)) {
+    return {
+      diagnosisHint: "Upper respiratory or ENT irritation pattern",
+      rationale: "Current symptoms fit supportive ENT symptom relief suggestions.",
+      templates: [
+        { name: "Levocetirizine", dosage: "5mg", schedule: "22:00", reason: "Can help allergy-linked congestion or irritation." },
+        { name: "Saline Nasal Spray", dosage: "2 sprays", schedule: "08:00,14:00,20:00", reason: "Supports nasal congestion relief without systemic exposure." }
+      ] satisfies MedicationTemplate[],
+      cautions: ["If bacterial infection is suspected, review antibiotic history and allergy status before prescribing."]
+    };
+  }
+
+  if (/child|pediatric|fever|poor appetite|viral/.test(text)) {
+    return {
+      diagnosisHint: "Pediatric viral or febrile symptom pattern",
+      rationale: "Symptoms suggest conservative fever support and hydration-oriented care.",
+      templates: [
+        { name: "Paracetamol Syrup", dosage: "7.5ml", schedule: "08:00,14:00,20:00", reason: "Common fever-relief option in pediatric follow-up." },
+        { name: "ORS", dosage: "100ml", schedule: "After each loose stool", reason: "Hydration support when intake is reduced." }
+      ] satisfies MedicationTemplate[],
+      cautions: ["Dose confirmation should be weight-based for children."]
+    };
+  }
+
+  if (/fever|sore throat|fatigue|general medicine/.test(text)) {
+    return {
+      diagnosisHint: "General viral or fever follow-up pattern",
+      rationale: "Symptoms fit supportive treatment suggestions with conservative symptomatic relief.",
+      templates: [
+        { name: "Paracetamol", dosage: "650mg", schedule: "08:00,14:00,21:00", reason: "Helps with fever and body ache relief." },
+        { name: "Salt Water Gargle", dosage: "N/A", schedule: "09:00,18:00", reason: "Supportive relief for throat irritation." }
+      ] satisfies MedicationTemplate[],
+      cautions: ["Escalate care for persistent fever, dehydration, or breathing concerns."]
+    };
+  }
+
+  return {
+    diagnosisHint: specialty || "General follow-up review",
+    rationale: "Suggestions are based on current symptoms, recent history, and common supportive options.",
+    templates: [] satisfies MedicationTemplate[],
+    cautions: ["Review diagnosis-specific contraindications before finalizing the prescription."]
+  };
+}
+
+export function buildPrescriptionSuggestions(
+  db: LocalDatabase,
+  input: { patientId: string; symptoms: string; specialty?: string | null }
+): PrescriptionSuggestion {
+  const allergies = db.allergies
+    .filter((row) => row.patient_id === input.patientId)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const previousPrescriptions = db.prescriptions
+    .filter((row) => row.patient_id === input.patientId)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice(0, 3);
+  const recentMedications = previousPrescriptions.flatMap((row) => decryptMedicationPayload(row.medications));
+  const recentMedicationNames = new Set(recentMedications.map((item) => normalizeText(item.name)));
+
+  const bundle = getTemplateBundle(input.symptoms, input.specialty);
+  const suggestions: PrescriptionSuggestionItem[] = bundle.templates.map((template) => {
+    const conflictingAllergy = allergies.find((allergy) => matchesAllergy(template.name, allergy.allergen));
+    const reasonParts = [template.reason];
+
+    if (recentMedicationNames.has(normalizeText(template.name))) {
+      reasonParts.push("Seen in recent prescription history.");
+    }
+
+    return {
+      name: template.name,
+      dosage: template.dosage,
+      schedule: template.schedule,
+      reason: reasonParts.join(" "),
+      blocked: Boolean(conflictingAllergy),
+      conflictReason: conflictingAllergy
+        ? `Matches recorded allergy: ${conflictingAllergy.allergen} (${conflictingAllergy.reaction}).`
+        : undefined
+    };
+  });
+
+  if (!suggestions.length && recentMedications.length) {
+    suggestions.push(
+      ...recentMedications.slice(0, 2).map((item) => {
+        const conflictingAllergy = allergies.find((allergy) => matchesAllergy(item.name, allergy.allergen));
+        return {
+          ...item,
+          reason: "Suggested from recent prescription history for clinician review.",
+          blocked: Boolean(conflictingAllergy),
+          conflictReason: conflictingAllergy
+            ? `Matches recorded allergy: ${conflictingAllergy.allergen} (${conflictingAllergy.reaction}).`
+            : undefined
+        };
+      })
+    );
+  }
+
+  const cautions = [...bundle.cautions];
+  if (allergies.length) {
+    cautions.unshift("Recorded allergies were checked against the draft suggestions.");
+  }
+  if (!recentMedications.length) {
+    cautions.push("No prior medication history was found for this patient.");
+  }
+
+  return {
+    diagnosisHint: bundle.diagnosisHint,
+    rationale: bundle.rationale,
+    allergySummary: allergies.map((item) => `${item.allergen} (${item.reaction}, ${item.severity})`),
+    cautions,
+    suggestions
+  };
+}
+
+export function suggestionItemsToMedicationText(items: PrescriptionSuggestionItem[]) {
+  return items
+    .filter((item) => !item.blocked)
+    .map(buildMedicationLine)
+    .join("\n");
 }

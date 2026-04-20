@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireVerifiedDoctor } from "@/lib/auth";
-import { parseMedicationLines } from "@/lib/data";
+import { findMedicationAllergyConflicts, parseMedicationLines } from "@/lib/data";
 import { makeId, updateDb } from "@/lib/local-db";
 import { encryptJson, encryptPHI } from "@/lib/security";
 
@@ -22,6 +22,15 @@ export async function POST(request: Request) {
 
   if (appointment.status !== "accepted" && appointment.status !== "completed") {
     return NextResponse.json({ error: "Only accepted appointments can receive prescriptions." }, { status: 400 });
+  }
+
+  const allergyConflicts = findMedicationAllergyConflicts(result.db, appointment.patient_id, medications);
+  if (allergyConflicts.length) {
+    return NextResponse.json({
+      error: `Blocked by recorded allergy: ${allergyConflicts
+        .map((item) => `${item.medicationName} vs ${item.allergen} (${item.reaction})`)
+        .join(", ")}.`
+    }, { status: 400 });
   }
 
   updateDb((db) => {

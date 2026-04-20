@@ -121,6 +121,15 @@ export type SymptomRecord = {
   created_at: string;
 };
 
+export type AllergyRecord = {
+  id: string;
+  patient_id: string;
+  allergen: string;
+  reaction: string;
+  severity: "low" | "medium" | "high";
+  created_at: string;
+};
+
 export type AppointmentRecord = {
   id: string;
   patient_id: string;
@@ -168,6 +177,23 @@ export type SessionRecord = {
   created_at: string;
 };
 
+export type PrescriptionSuggestionItem = {
+  name: string;
+  dosage: string;
+  schedule: string;
+  reason: string;
+  blocked: boolean;
+  conflictReason?: string;
+};
+
+export type PrescriptionSuggestion = {
+  diagnosisHint: string;
+  rationale: string;
+  allergySummary: string[];
+  cautions: string[];
+  suggestions: PrescriptionSuggestionItem[];
+};
+
 export type LocalDatabase = {
   auth_users: AuthUser[];
   users: UserProfile[];
@@ -179,6 +205,7 @@ export type LocalDatabase = {
   appointments: AppointmentRecord[];
   prescriptions: PrescriptionRecord[];
   symptoms: SymptomRecord[];
+  allergies: AllergyRecord[];
   reviews: ReviewRecord[];
   medication_reminders: MedicationReminderRecord[];
   sessions: SessionRecord[];

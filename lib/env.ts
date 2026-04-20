@@ -11,14 +11,10 @@ export function getSupabaseServiceRoleKey() {
   return required("SUPABASE_SERVICE_ROLE_KEY");
 }
 
-export function getXaiApiKey() {
-  return process.env.XAI_API_KEY || "";
+export function getGeminiApiKey() {
+  return process.env.GEMINI_API_KEY || "";
 }
 
-export function getXaiBaseUrl() {
-  return process.env.XAI_BASE_URL || "https://api.x.ai/v1";
-}
-
-export function getXaiModel() {
-  return process.env.XAI_MODEL || "grok-4";
+export function getGeminiModel() {
+  return process.env.GEMINI_MODEL || "gemini-3-flash-preview";
 }

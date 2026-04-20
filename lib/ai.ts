@@ -1,5 +1,6 @@
+import { GoogleGenAI } from "@google/genai";
 import { decryptJson, tryDecryptPHI } from "@/lib/security";
-import { getXaiApiKey, getXaiBaseUrl, getXaiModel } from "@/lib/env";
+import { getGeminiApiKey, getGeminiModel } from "@/lib/env";
 import type { DoctorRecommendation, MedicationItem } from "@/lib/types";
 
 type SymptomAnalysis = {
@@ -22,66 +23,31 @@ function extractJson<T>(content: string) {
   return JSON.parse(match[0]) as T;
 }
 
-function extractContentText(content: unknown) {
-  if (typeof content === "string") {
-    return content;
+function getAiClient() {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    return null;
   }
 
-  if (Array.isArray(content)) {
-    return content
-      .map((part) => {
-        if (typeof part === "string") {
-          return part;
-        }
-        if (part && typeof part === "object") {
-          const record = part as Record<string, unknown>;
-          if (typeof record.text === "string") {
-            return record.text;
-          }
-        }
-        return "";
-      })
-      .join("\n")
-      .trim();
-  }
-
-  return "";
+  return new GoogleGenAI({ apiKey });
 }
 
-async function grokJson<T>(systemPrompt: string, userPrompt: string, fallback: T) {
-  const apiKey = getXaiApiKey();
-  if (!apiKey) {
+async function geminiJson<T>(systemPrompt: string, userPrompt: string, fallback: T) {
+  const ai = getAiClient();
+  if (!ai) {
     return fallback;
   }
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    const response = await fetch(`${getXaiBaseUrl()}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: getXaiModel(),
+    const response = await ai.models.generateContent({
+      model: getGeminiModel(),
+      config: {
         temperature: 0.2,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ]
-      }),
-      signal: controller.signal
+        systemInstruction: systemPrompt
+      },
+      contents: userPrompt
     });
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      return fallback;
-    }
-
-    const data = await response.json();
-    const content = extractContentText(data.choices?.[0]?.message?.content);
+    const content = response.text?.trim();
     if (!content) {
       return fallback;
     }
@@ -106,7 +72,7 @@ export async function analyzeSymptomsWithAi(symptoms: string) {
     doctorReasoning: "Verified doctors are ranked by specialty fit, rating, and distance."
   };
 
-  return grokJson<SymptomAnalysis>(
+  return geminiJson<SymptomAnalysis>(
     "You are a clinical triage assistant. Return strict JSON with keys specialty, rationale, urgency, doctorReasoning. Never diagnose definitively. Keep rationale concise and safe.",
     `Patient symptoms: ${symptoms}`,
     fallback
@@ -126,13 +92,44 @@ export async function summarizePatientHistoryWithAi(input: {
       : "New patient with limited historical data."
   };
 
-  const result = await grokJson<{ summary: string }>(
+  const result = await geminiJson<{ summary: string }>(
     "You are a medical summarization assistant for clinicians. Return strict JSON with one key named summary. Write one short paragraph summarizing the patient's previous prescriptions and current symptoms. Do not invent facts.",
     JSON.stringify(input),
     fallback
   );
 
   return result.summary;
+}
+
+export async function verifyAiConnection() {
+  const ai = getAiClient();
+  if (!ai) {
+    return {
+      ok: false,
+      provider: "gemini",
+      reason: "Missing GEMINI_API_KEY."
+    };
+  }
+
+  try {
+    const response = await ai.models.generateContent({
+      model: getGeminiModel(),
+      contents: "Reply with exactly the word OK."
+    });
+
+    return {
+      ok: /ok/i.test(response.text || ""),
+      provider: "gemini",
+      model: getGeminiModel()
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      provider: "gemini",
+      model: getGeminiModel(),
+      reason: error instanceof Error ? error.message : "Unknown Gemini error."
+    };
+  }
 }
 
 export function decryptMedicationPayload(payload: unknown) {

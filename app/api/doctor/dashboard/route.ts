@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireRole, getDoctorProfileForUser } from "@/lib/auth";
-import { decryptPrescriptionFields, decryptStoredSymptom, fetchPatientHistorySummary, maskPatientContact } from "@/lib/data";
+import { buildPrescriptionSuggestions, decryptPrescriptionFields, decryptStoredSymptom, fetchPatientHistorySummary, maskPatientContact } from "@/lib/data";
 
 export async function GET() {
   const result = await requireRole("doctor");
@@ -53,6 +53,11 @@ export async function GET() {
         appointment.patient_id as string,
         currentSymptom
       );
+      const prescriptionSuggestions = buildPrescriptionSuggestions(result.db, {
+        patientId: appointment.patient_id as string,
+        symptoms: currentSymptom,
+        specialty: doctor.specialty
+      });
       const prescription = prescriptionsByAppointment.get(appointment.id as string);
       const decryptedPrescription = prescription ? decryptPrescriptionFields(prescription) : null;
       const previousHistory = result.db.prescriptions
@@ -73,6 +78,15 @@ export async function GET() {
         slotStart: (slot?.start_time as string | null) || null,
         symptoms: currentSymptom,
         patientHistorySummary: summary,
+        allergies: result.db.allergies
+          .filter((item) => item.patient_id === appointment.patient_id)
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))
+          .map((item) => ({
+            allergen: item.allergen,
+            reaction: item.reaction,
+            severity: item.severity
+          })),
+        prescriptionSuggestions,
         prescription: decryptedPrescription,
         hasArrived: Boolean(appointment.patient_arrived_at),
         patientArrivedAt: appointment.patient_arrived_at,

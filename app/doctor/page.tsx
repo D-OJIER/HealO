@@ -3,6 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+type SuggestionItem = {
+  name: string;
+  dosage: string;
+  schedule: string;
+  reason: string;
+  blocked: boolean;
+  conflictReason?: string;
+};
+
+type PrescriptionSuggestion = {
+  diagnosisHint: string;
+  rationale: string;
+  allergySummary: string[];
+  cautions: string[];
+  suggestions: SuggestionItem[];
+};
+
 type Dashboard = {
   doctor: {
     name: string;
@@ -30,6 +47,8 @@ type Dashboard = {
       symptoms: string;
       slotStart: string | null;
       patientHistorySummary: string;
+      allergies: Array<{ allergen: string; reaction: string; severity: "low" | "medium" | "high" }>;
+      prescriptionSuggestions: PrescriptionSuggestion;
       hasArrived: boolean;
       patientArrivedAt: string | null;
       previousPrescriptions: Array<{
@@ -49,6 +68,8 @@ type Dashboard = {
     symptoms: string;
     slotStart: string | null;
     patientHistorySummary: string;
+    allergies: Array<{ allergen: string; reaction: string; severity: "low" | "medium" | "high" }>;
+    prescriptionSuggestions: PrescriptionSuggestion;
     hasArrived: boolean;
     patientArrivedAt: string | null;
     previousPrescriptions: Array<{
@@ -81,6 +102,8 @@ export default function DoctorPage() {
   const [message, setMessage] = useState("");
 
   const clinicMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${Number(clinicForm.longitude) - 0.02}%2C${Number(clinicForm.latitude) - 0.02}%2C${Number(clinicForm.longitude) + 0.02}%2C${Number(clinicForm.latitude) + 0.02}&layer=mapnik&marker=${clinicForm.latitude}%2C${clinicForm.longitude}`;
+  const selectedAppointment =
+    dashboard?.appointments.find((appointment) => appointment.id === prescriptionForm.appointmentId) || null;
 
   async function authedFetch(url: string, init?: RequestInit) {
     const response = await fetch(url, {
@@ -161,8 +184,30 @@ export default function DoctorPage() {
     });
     if (!response) return;
     const data = await response.json();
-    setMessage(data.message);
+    setMessage(data.message || data.error);
+    if (!response.ok) {
+      return;
+    }
     await loadDashboard();
+  }
+
+  function useSuggestedDraft() {
+    if (!selectedAppointment) return;
+
+    const suggestedMedicationLines = selectedAppointment.prescriptionSuggestions.suggestions
+      .filter((item) => !item.blocked)
+      .map((item) => `${item.name} | ${item.dosage} | ${item.schedule}`)
+      .join("\n");
+
+    setPrescriptionForm((current) => ({
+      ...current,
+      appointmentId: selectedAppointment.id,
+      diagnosis: current.diagnosis || selectedAppointment.prescriptionSuggestions.diagnosisHint,
+      doctorNotes:
+        current.doctorNotes ||
+        `${selectedAppointment.prescriptionSuggestions.rationale} ${selectedAppointment.prescriptionSuggestions.cautions.join(" ")}`.trim(),
+      medicationsText: suggestedMedicationLines || current.medicationsText
+    }));
   }
 
   function useCurrentLocation() {
@@ -256,6 +301,11 @@ export default function DoctorPage() {
                   <p>Current symptoms: {slot.appointment.symptoms}</p>
                   <p>AI summary: {slot.appointment.patientHistorySummary}</p>
                   <p>
+                    Allergies: {slot.appointment.allergies.length
+                      ? slot.appointment.allergies.map((item) => `${item.allergen} (${item.reaction})`).join(", ")
+                      : "No allergies recorded"}
+                  </p>
+                  <p>
                     Arrival: {slot.appointment.hasArrived ? `marked at ${new Date(slot.appointment.patientArrivedAt || "").toLocaleString()}` : "not marked"}
                   </p>
                   {slot.appointment.hasArrived ? (
@@ -298,6 +348,33 @@ export default function DoctorPage() {
             <option key={appointment.id} value={appointment.id}>{appointment.patientName} | {appointment.status}</option>
           ))}
         </select>
+        {selectedAppointment ? (
+          <div className="callout">
+            <strong>Prescription suggestions</strong>
+            <p>Current issue: {selectedAppointment.symptoms || "No symptom note available."}</p>
+            <p>History summary: {selectedAppointment.patientHistorySummary}</p>
+            <p>
+              Recorded allergies: {selectedAppointment.prescriptionSuggestions.allergySummary.length
+                ? selectedAppointment.prescriptionSuggestions.allergySummary.join(", ")
+                : "No allergies recorded"}
+            </p>
+            <p>Suggestion logic: {selectedAppointment.prescriptionSuggestions.rationale}</p>
+            {selectedAppointment.prescriptionSuggestions.suggestions.length ? (
+              selectedAppointment.prescriptionSuggestions.suggestions.map((item, index) => (
+                <p key={`${selectedAppointment.id}-suggestion-${index}`}>
+                  {item.blocked ? "Blocked" : "Suggested"}: {item.name} {item.dosage} | {item.schedule} | {item.reason}
+                  {item.conflictReason ? ` ${item.conflictReason}` : ""}
+                </p>
+              ))
+            ) : (
+              <p>No medication suggestions available yet for this issue.</p>
+            )}
+            {selectedAppointment.prescriptionSuggestions.cautions.map((item, index) => (
+              <p key={`${selectedAppointment.id}-caution-${index}`}>Caution: {item}</p>
+            ))}
+            <button type="button" className="ghost" onClick={useSuggestedDraft}>Use suggested draft</button>
+          </div>
+        ) : null}
         <textarea rows={4} placeholder="Diagnosis notes" value={prescriptionForm.diagnosis} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, diagnosis: e.target.value })} />
         <textarea rows={4} placeholder="Doctor notes" value={prescriptionForm.doctorNotes} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, doctorNotes: e.target.value })} />
         <textarea rows={5} placeholder="One medication per line: name | dosage | schedule" value={prescriptionForm.medicationsText} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, medicationsText: e.target.value })} />

@@ -98,7 +98,7 @@ export default function HomePage() {
             <li>SHA-256 hashed doctor registry verification in database triggers</li>
             <li>AES-256 encrypted symptoms, diagnosis notes, and prescriptions</li>
             <li>PHI masking for analytics-friendly UI surfaces</li>
-            <li>Grok-powered specialty mapping and patient-history summaries</li>
+            <li>Gemini-powered specialty mapping and patient-history summaries</li>
           </ul>
         </div>
       </section>
