@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireVerifiedDoctor } from "@/lib/auth";
-import { findMedicationAllergyConflicts, parseMedicationLines } from "@/lib/data";
+import { findMedicationAllergyConflicts, normalizeMedicationItem, parseMedicationLines } from "@/lib/data";
 import { makeId, updateDb } from "@/lib/local-db";
 import { encryptJson, encryptPHI } from "@/lib/security";
+import type { MedicationItem } from "@/lib/types";
 
 export async function POST(request: Request) {
   const result = await requireVerifiedDoctor();
@@ -10,8 +11,10 @@ export async function POST(request: Request) {
     return result.response;
   }
 
-  const { appointmentId, diagnosis, doctorNotes, medicationsText } = await request.json();
-  const medications = parseMedicationLines(medicationsText || "");
+  const { appointmentId, diagnosis, doctorNotes, medicationsText, medications } = await request.json();
+  const normalizedMedications: MedicationItem[] = Array.isArray(medications) && medications.length
+    ? medications.map(normalizeMedicationItem).filter((item) => item.name && item.dosage)
+    : parseMedicationLines(medicationsText || "");
 
   const appointment = result.db.appointments.find(
     (item) => item.id === appointmentId && item.doctor_id === result.doctor.id
@@ -24,11 +27,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Only accepted appointments can receive prescriptions." }, { status: 400 });
   }
 
-  const allergyConflicts = findMedicationAllergyConflicts(result.db, appointment.patient_id, medications);
+  const allergyConflicts = findMedicationAllergyConflicts(result.db, appointment.patient_id, normalizedMedications);
   if (allergyConflicts.length) {
     return NextResponse.json({
       error: `Blocked by recorded allergy: ${allergyConflicts
-        .map((item) => `${item.medicationName} vs ${item.allergen} (${item.reaction})`)
+          .map((item) => `${item.medicationName} vs ${item.allergen} (${item.reaction})`)
         .join(", ")}.`
     }, { status: 400 });
   }
@@ -42,18 +45,18 @@ export async function POST(request: Request) {
       diagnosis: encryptPHI(diagnosis),
       doctor_notes: encryptPHI(doctorNotes || ""),
       medications: {
-        ciphertext: encryptJson(medications)
+        ciphertext: encryptJson(normalizedMedications)
       },
       created_at: new Date().toISOString()
     });
 
-    if (medications.length) {
+    if (normalizedMedications.length) {
       db.medication_reminders.push(
-        ...medications.map((item) => ({
+        ...normalizedMedications.map((item) => ({
           id: makeId("reminder"),
           patient_id: appointment.patient_id,
           medication_name: `${item.name}${item.dosage ? ` (${item.dosage})` : ""}`,
-          schedule: item.schedule,
+          schedule: item.schedule || "",
           enabled: true,
           created_at: new Date().toISOString()
         }))

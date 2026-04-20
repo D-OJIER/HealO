@@ -213,6 +213,34 @@
       "registration_number_hash": "71084db0dd603977ae57b2c3f74d95976b40b05468bab1155a66e1a06fab655f",
       "specialty": "ENT",
       "created_at": "2026-04-20T08:30:00.000Z"
+    },
+    {
+      "id": "regdoc-ananya",
+      "name": "Dr. Ananya Patel",
+      "registration_number_hash": "d7b53dfc67eae056bd4191a91c1764b90d8245cba6a79732cd4c219167eb40f8",
+      "specialty": "General Medicine",
+      "created_at": "2026-04-20T08:30:00.000Z"
+    },
+    {
+      "id": "regdoc-raghav",
+      "name": "Dr. Raghav Bhat",
+      "registration_number_hash": "0056db8286b8b48cf98be21db2a496ed05e1549c527f51fe814aab159c304f63",
+      "specialty": "Cardiology",
+      "created_at": "2026-04-20T08:30:00.000Z"
+    },
+    {
+      "id": "regdoc-leena",
+      "name": "Dr. Leena Thomas",
+      "registration_number_hash": "6113953ae7606936e4bb23af65143b555a6399b945c5cd838115912a734b34c9",
+      "specialty": "Dermatology",
+      "created_at": "2026-04-20T08:30:00.000Z"
+    },
+    {
+      "id": "regdoc-sid",
+      "name": "Dr. Siddharth Kulkarni",
+      "registration_number_hash": "d8b2408cc32286bac67d1acf7abca36796235d6be5a50bbeca289ae7b0fcff61",
+      "specialty": "Orthopedics",
+      "created_at": "2026-04-20T08:30:00.000Z"
     }
   ],
   "doctors": [

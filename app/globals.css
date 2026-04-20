@@ -176,6 +176,78 @@ select {
   background: rgba(24, 33, 38, 0.04);
 }
 
+.prescription-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1.4fr) minmax(120px, 0.8fr) minmax(0, 1.6fr) minmax(140px, 0.8fr) 110px;
+  align-items: start;
+}
+
+.prescription-grid-header {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.prescription-grid-row {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.medicine-cell {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.autocomplete-list,
+.timing-pills,
+.prescription-table {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.autocomplete-list {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.autocomplete-item,
+.timing-pill {
+  border-radius: 14px;
+  padding: 0.7rem 0.8rem;
+}
+
+.autocomplete-item {
+  background: rgba(13, 122, 104, 0.08);
+  color: var(--ink);
+}
+
+.active-pill {
+  border-color: var(--accent);
+  background: rgba(13, 122, 104, 0.16);
+}
+
+.timing-pills {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.prescription-table {
+  margin-top: 0.75rem;
+}
+
+.prescription-table-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(120px, 0.7fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.prescription-table-head {
+  background: rgba(13, 122, 104, 0.1);
+}
+
 .select-card {
   width: 100%;
   text-align: left;
@@ -198,6 +270,12 @@ ul {
   .hero,
   .grid-two,
   .topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .prescription-grid,
+  .prescription-table-row,
+  .timing-pills {
     grid-template-columns: 1fr;
   }
 

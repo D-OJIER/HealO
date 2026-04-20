@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Coordinates = { lat: number; lng: number };
+type MedicationView = {
+  name: string;
+  dosage: string;
+  timing: Array<"morning" | "afternoon" | "evening" | "night">;
+  foodRelation: "before_food" | "after_food";
+  schedule?: string;
+};
 
 type Dashboard = {
   patient: { name: string; emailMasked: string; phoneMasked: string };
@@ -56,12 +63,19 @@ type Dashboard = {
   prescriptions: Array<{
     id: string;
     doctorName: string;
+    prescribedAt: string;
+    consultationAt: string | null;
     diagnosis: string;
-    medications: Array<{ name: string; dosage: string; schedule: string }>;
+    medications: MedicationView[];
     notes: string;
   }>;
   reminders: Array<{ id: string; medication_name: string; schedule: string; enabled: boolean }>;
 };
+
+function formatMedicationTiming(item: MedicationView) {
+  const timing = item.timing.map((slot) => `${slot.charAt(0).toUpperCase()}${slot.slice(1)}`).join(", ");
+  return `${timing} | ${item.foodRelation === "before_food" ? "Before Food" : "After Food"}`;
+}
 
 export default function PatientPage() {
   const router = useRouter();
@@ -359,12 +373,23 @@ export default function PatientPage() {
             {dashboard.prescriptions.map((prescription) => (
               <div className="card" key={prescription.id}>
                 <h3>{prescription.doctorName}</h3>
+                <p>Visit: {new Date(prescription.consultationAt || prescription.prescribedAt).toLocaleString()}</p>
                 <p>Diagnosis: {prescription.diagnosis}</p>
                 <p>Notes: {prescription.notes}</p>
-                <p>
-                  Medications:{" "}
-                  {prescription.medications.map((item) => `${item.name} ${item.dosage} (${item.schedule})`).join(", ")}
-                </p>
+                <div className="prescription-table">
+                  <div className="prescription-table-row prescription-table-head">
+                    <strong>Tablet Name</strong>
+                    <strong>Dosage</strong>
+                    <strong>Timing</strong>
+                  </div>
+                  {prescription.medications.map((item, index) => (
+                    <div className="prescription-table-row" key={`${prescription.id}-${index}`}>
+                      <span>{item.name}</span>
+                      <span>{item.dosage}</span>
+                      <span>{formatMedicationTiming(item)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
             {dashboard.reminders.map((reminder) => (
@@ -376,6 +401,34 @@ export default function PatientPage() {
             ))}
           </div>
         </article>
+      </section>
+
+      <section className="panel">
+        <h2>Consultation History</h2>
+        <div className="cards">
+          {dashboard.prescriptions.map((prescription) => (
+            <article className="card" key={`history-${prescription.id}`}>
+              <h3>{prescription.doctorName}</h3>
+              <p>When: {new Date(prescription.consultationAt || prescription.prescribedAt).toLocaleString()}</p>
+              <p>Whom: {prescription.doctorName}</p>
+              <p>Why: {prescription.diagnosis}</p>
+              <div className="prescription-table">
+                <div className="prescription-table-row prescription-table-head">
+                  <strong>Tablet Name</strong>
+                  <strong>Dosage</strong>
+                  <strong>Timing</strong>
+                </div>
+                {prescription.medications.map((item, index) => (
+                  <div className="prescription-table-row" key={`history-med-${prescription.id}-${index}`}>
+                    <span>{item.name}</span>
+                    <span>{item.dosage}</span>
+                    <span>{formatMedicationTiming(item)}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   );

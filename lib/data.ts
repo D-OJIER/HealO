@@ -5,6 +5,23 @@ import type { Coordinates, DoctorRecommendation, LocalDatabase, MedicationItem, 
 
 const MINIMUM_REVIEW_THRESHOLD = 5;
 type LooseRecord = Record<string, unknown>;
+const TIMING_ORDER = ["morning", "afternoon", "evening", "night"] as const;
+
+export const MEDICINE_CATALOG = [
+  "Aceclofenac",
+  "Amoxicillin",
+  "Azithromycin",
+  "Calamine Lotion",
+  "Cetirizine",
+  "Cold Pack",
+  "Ibuprofen",
+  "Levocetirizine",
+  "ORS",
+  "Paracetamol",
+  "Paracetamol Syrup",
+  "Saline Nasal Spray",
+  "Salt Water Gargle"
+] as const;
 
 const DOCTOR_METADATA: Record<
   string,
@@ -247,7 +264,13 @@ export function parseMedicationLines(input: string) {
     .filter(Boolean)
     .map((line) => {
       const [name = "", dosage = "", schedule = ""] = line.split("|").map((part) => part.trim());
-      return { name, dosage, schedule } satisfies MedicationItem;
+      return {
+        name,
+        dosage,
+        timing: parseTimingString(schedule),
+        foodRelation: /before/i.test(schedule) ? "before_food" : "after_food",
+        schedule
+      } satisfies MedicationItem;
     })
     .filter((item) => item.name && item.schedule);
 }
@@ -268,7 +291,7 @@ export function decryptPrescriptionFields(input: {
   return {
     diagnosis: tryDecryptPHI(input.diagnosis),
     notes: tryDecryptPHI(input.doctor_notes),
-    medications: decryptMedicationPayload(input.medications)
+    medications: decryptMedicationPayload(input.medications).map(normalizeMedicationItem)
   };
 }
 
@@ -279,7 +302,8 @@ export function decryptStoredSymptom(value: string | null) {
 type MedicationTemplate = {
   name: string;
   dosage: string;
-  schedule: string;
+  timing: MedicationItem["timing"];
+  foodRelation: MedicationItem["foodRelation"];
   reason: string;
 };
 
@@ -288,7 +312,38 @@ function normalizeText(value: string) {
 }
 
 function buildMedicationLine(item: MedicationTemplate | PrescriptionSuggestionItem) {
-  return `${item.name} | ${item.dosage} | ${item.schedule}`;
+  return `${item.name} | ${item.dosage} | ${formatTimingText(item.timing, item.foodRelation)}`;
+}
+
+export function parseTimingString(value: string) {
+  const normalized = value.toLowerCase();
+  const selected = TIMING_ORDER.filter((slot) => normalized.includes(slot));
+  return selected.length ? [...selected] : ["morning"] as MedicationItem["timing"];
+}
+
+export function formatTimingText(
+  timing: MedicationItem["timing"],
+  foodRelation: MedicationItem["foodRelation"]
+) {
+  const label = timing
+    .map((item) => item.charAt(0).toUpperCase() + item.slice(1))
+    .join(", ");
+  return `${label} | ${foodRelation === "before_food" ? "Before Food" : "After Food"}`;
+}
+
+export function normalizeMedicationItem(item: Partial<MedicationItem>) {
+  const timing =
+    Array.isArray(item.timing) && item.timing.length
+      ? item.timing.filter((slot): slot is MedicationItem["timing"][number] => TIMING_ORDER.includes(slot as MedicationItem["timing"][number]))
+      : parseTimingString(item.schedule || "");
+
+  return {
+    name: item.name || "",
+    dosage: item.dosage || "",
+    timing: timing.length ? timing : ["morning"],
+    foodRelation: item.foodRelation === "before_food" ? "before_food" : "after_food",
+    schedule: item.schedule || formatTimingText(timing.length ? timing : ["morning"], item.foodRelation === "before_food" ? "before_food" : "after_food")
+  } satisfies MedicationItem;
 }
 
 function matchesAllergy(medicationName: string, allergen: string) {
@@ -332,8 +387,8 @@ function getTemplateBundle(symptoms: string, specialty?: string | null) {
       diagnosisHint: "Allergic or inflammatory skin flare",
       rationale: "Skin and allergy symptom patterns align with an antihistamine plus topical relief plan.",
       templates: [
-        { name: "Cetirizine", dosage: "10mg", schedule: "22:00", reason: "Helps reduce allergy-driven itching." },
-        { name: "Calamine Lotion", dosage: "Topical", schedule: "08:00,20:00", reason: "Useful for symptomatic skin relief." }
+        { name: "Cetirizine", dosage: "10mg", timing: ["night"], foodRelation: "after_food", reason: "Helps reduce allergy-driven itching." },
+        { name: "Calamine Lotion", dosage: "Topical", timing: ["morning", "night"], foodRelation: "after_food", reason: "Useful for symptomatic skin relief." }
       ] satisfies MedicationTemplate[],
       cautions: ["Confirm lesion pattern and infection risk before prescribing steroid-containing topicals."]
     };
@@ -344,8 +399,8 @@ function getTemplateBundle(symptoms: string, specialty?: string | null) {
       diagnosisHint: "Musculoskeletal pain or sprain pattern",
       rationale: "Pain-focused symptoms align with short-course analgesia and supportive care reminders.",
       templates: [
-        { name: "Ibuprofen", dosage: "400mg", schedule: "09:00,21:00", reason: "Common first-line option for inflammatory pain if tolerated." },
-        { name: "Cold Pack", dosage: "15 min", schedule: "08:00,16:00,22:00", reason: "Supports swelling and pain control." }
+        { name: "Ibuprofen", dosage: "400mg", timing: ["morning", "night"], foodRelation: "after_food", reason: "Common first-line option for inflammatory pain if tolerated." },
+        { name: "Cold Pack", dosage: "15 min", timing: ["morning", "evening", "night"], foodRelation: "after_food", reason: "Supports swelling and pain control." }
       ] satisfies MedicationTemplate[],
       cautions: ["Avoid NSAID suggestions if there is gastric, kidney, or NSAID allergy history."]
     };
@@ -356,8 +411,8 @@ function getTemplateBundle(symptoms: string, specialty?: string | null) {
       diagnosisHint: "Upper respiratory or ENT irritation pattern",
       rationale: "Current symptoms fit supportive ENT symptom relief suggestions.",
       templates: [
-        { name: "Levocetirizine", dosage: "5mg", schedule: "22:00", reason: "Can help allergy-linked congestion or irritation." },
-        { name: "Saline Nasal Spray", dosage: "2 sprays", schedule: "08:00,14:00,20:00", reason: "Supports nasal congestion relief without systemic exposure." }
+        { name: "Levocetirizine", dosage: "5mg", timing: ["night"], foodRelation: "after_food", reason: "Can help allergy-linked congestion or irritation." },
+        { name: "Saline Nasal Spray", dosage: "2 sprays", timing: ["morning", "afternoon", "night"], foodRelation: "after_food", reason: "Supports nasal congestion relief without systemic exposure." }
       ] satisfies MedicationTemplate[],
       cautions: ["If bacterial infection is suspected, review antibiotic history and allergy status before prescribing."]
     };
@@ -368,8 +423,8 @@ function getTemplateBundle(symptoms: string, specialty?: string | null) {
       diagnosisHint: "Pediatric viral or febrile symptom pattern",
       rationale: "Symptoms suggest conservative fever support and hydration-oriented care.",
       templates: [
-        { name: "Paracetamol Syrup", dosage: "7.5ml", schedule: "08:00,14:00,20:00", reason: "Common fever-relief option in pediatric follow-up." },
-        { name: "ORS", dosage: "100ml", schedule: "After each loose stool", reason: "Hydration support when intake is reduced." }
+        { name: "Paracetamol Syrup", dosage: "7.5ml", timing: ["morning", "afternoon", "night"], foodRelation: "after_food", reason: "Common fever-relief option in pediatric follow-up." },
+        { name: "ORS", dosage: "100ml", timing: ["morning", "afternoon", "evening", "night"], foodRelation: "after_food", reason: "Hydration support when intake is reduced." }
       ] satisfies MedicationTemplate[],
       cautions: ["Dose confirmation should be weight-based for children."]
     };
@@ -380,8 +435,8 @@ function getTemplateBundle(symptoms: string, specialty?: string | null) {
       diagnosisHint: "General viral or fever follow-up pattern",
       rationale: "Symptoms fit supportive treatment suggestions with conservative symptomatic relief.",
       templates: [
-        { name: "Paracetamol", dosage: "650mg", schedule: "08:00,14:00,21:00", reason: "Helps with fever and body ache relief." },
-        { name: "Salt Water Gargle", dosage: "N/A", schedule: "09:00,18:00", reason: "Supportive relief for throat irritation." }
+        { name: "Paracetamol", dosage: "650mg", timing: ["morning", "afternoon", "night"], foodRelation: "after_food", reason: "Helps with fever and body ache relief." },
+        { name: "Salt Water Gargle", dosage: "N/A", timing: ["morning", "evening"], foodRelation: "after_food", reason: "Supportive relief for throat irritation." }
       ] satisfies MedicationTemplate[],
       cautions: ["Escalate care for persistent fever, dehydration, or breathing concerns."]
     };
@@ -421,7 +476,9 @@ export function buildPrescriptionSuggestions(
     return {
       name: template.name,
       dosage: template.dosage,
-      schedule: template.schedule,
+      timing: template.timing,
+      foodRelation: template.foodRelation,
+      schedule: formatTimingText(template.timing, template.foodRelation),
       reason: reasonParts.join(" "),
       blocked: Boolean(conflictingAllergy),
       conflictReason: conflictingAllergy
@@ -435,7 +492,7 @@ export function buildPrescriptionSuggestions(
       ...recentMedications.slice(0, 2).map((item) => {
         const conflictingAllergy = allergies.find((allergy) => matchesAllergy(item.name, allergy.allergen));
         return {
-          ...item,
+          ...normalizeMedicationItem(item),
           reason: "Suggested from recent prescription history for clinician review.",
           blocked: Boolean(conflictingAllergy),
           conflictReason: conflictingAllergy

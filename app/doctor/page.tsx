@@ -1,11 +1,46 @@
 "use client";
 
+import type { KeyboardEvent } from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
+const MEDICINE_OPTIONS = [
+  "Aceclofenac",
+  "Amoxicillin",
+  "Azithromycin",
+  "Calamine Lotion",
+  "Cetirizine",
+  "Cold Pack",
+  "Ibuprofen",
+  "Levocetirizine",
+  "ORS",
+  "Paracetamol",
+  "Paracetamol Syrup",
+  "Saline Nasal Spray",
+  "Salt Water Gargle"
+] as const;
+
+const TIMING_OPTIONS = [
+  { value: "morning", label: "Morning" },
+  { value: "afternoon", label: "Afternoon" },
+  { value: "evening", label: "Evening" },
+  { value: "night", label: "Night" }
+] as const;
+
+type TimingValue = (typeof TIMING_OPTIONS)[number]["value"];
+
+type MedicationRow = {
+  name: string;
+  dosage: string;
+  timing: TimingValue[];
+  foodRelation: "before_food" | "after_food";
+};
 
 type SuggestionItem = {
   name: string;
   dosage: string;
+  timing: TimingValue[];
+  foodRelation: "before_food" | "after_food";
   schedule: string;
   reason: string;
   blocked: boolean;
@@ -81,6 +116,13 @@ type Dashboard = {
   }>;
 };
 
+const emptyMedicationRow = (): MedicationRow => ({
+  name: "",
+  dosage: "",
+  timing: [],
+  foodRelation: "after_food"
+});
+
 export default function DoctorPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -96,14 +138,48 @@ export default function DoctorPage() {
   const [prescriptionForm, setPrescriptionForm] = useState({
     appointmentId: "",
     diagnosis: "",
-    doctorNotes: "",
-    medicationsText: "Paracetamol | 650mg | 08:00,14:00,21:00"
+    doctorNotes: ""
   });
+  const [medicationRows, setMedicationRows] = useState<MedicationRow[]>([emptyMedicationRow()]);
   const [message, setMessage] = useState("");
 
   const clinicMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${Number(clinicForm.longitude) - 0.02}%2C${Number(clinicForm.latitude) - 0.02}%2C${Number(clinicForm.longitude) + 0.02}%2C${Number(clinicForm.latitude) + 0.02}&layer=mapnik&marker=${clinicForm.latitude}%2C${clinicForm.longitude}`;
   const selectedAppointment =
     dashboard?.appointments.find((appointment) => appointment.id === prescriptionForm.appointmentId) || null;
+  const suggestionDraft = selectedAppointment
+    ? {
+        diagnosis: selectedAppointment.prescriptionSuggestions.diagnosisHint,
+        doctorNotes:
+          `${selectedAppointment.prescriptionSuggestions.rationale} ${selectedAppointment.prescriptionSuggestions.cautions.join(" ")}`.trim(),
+        medications: selectedAppointment.prescriptionSuggestions.suggestions
+          .filter((item) => !item.blocked)
+          .map((item) => ({
+            name: item.name,
+            dosage: item.dosage,
+            timing: item.timing,
+            foodRelation: item.foodRelation
+          }))
+      }
+    : { diagnosis: "", doctorNotes: "", medications: [] as MedicationRow[] };
+
+  function getAutocompletePreview(currentValue: string, suggestedValue: string) {
+    if (!suggestedValue) {
+      return "";
+    }
+
+    if (!currentValue) {
+      return suggestedValue;
+    }
+
+    if (suggestedValue.toLowerCase().startsWith(currentValue.toLowerCase())) {
+      return suggestedValue.slice(currentValue.length);
+    }
+
+    return "";
+  }
+
+  const diagnosisPreview = getAutocompletePreview(prescriptionForm.diagnosis, suggestionDraft.diagnosis);
+  const doctorNotesPreview = getAutocompletePreview(prescriptionForm.doctorNotes, suggestionDraft.doctorNotes);
 
   async function authedFetch(url: string, init?: RequestInit) {
     const response = await fetch(url, {
@@ -127,6 +203,7 @@ export default function DoctorPage() {
     setDashboard(data);
     setSlotForm((current) => ({ ...current, clinicId: data.clinics[0]?.id || "" }));
     setPrescriptionForm((current) => ({ ...current, appointmentId: data.appointments[0]?.id || "" }));
+    setMedicationRows((current) => current.length ? current : [emptyMedicationRow()]);
   }
 
   useEffect(() => {
@@ -180,7 +257,10 @@ export default function DoctorPage() {
   async function savePrescription() {
     const response = await authedFetch("/api/doctor/prescriptions", {
       method: "POST",
-      body: JSON.stringify(prescriptionForm)
+      body: JSON.stringify({
+        ...prescriptionForm,
+        medications: medicationRows.filter((item) => item.name && item.dosage && item.timing.length)
+      })
     });
     if (!response) return;
     const data = await response.json();
@@ -194,20 +274,40 @@ export default function DoctorPage() {
   function useSuggestedDraft() {
     if (!selectedAppointment) return;
 
-    const suggestedMedicationLines = selectedAppointment.prescriptionSuggestions.suggestions
-      .filter((item) => !item.blocked)
-      .map((item) => `${item.name} | ${item.dosage} | ${item.schedule}`)
-      .join("\n");
-
     setPrescriptionForm((current) => ({
       ...current,
       appointmentId: selectedAppointment.id,
-      diagnosis: current.diagnosis || selectedAppointment.prescriptionSuggestions.diagnosisHint,
-      doctorNotes:
-        current.doctorNotes ||
-        `${selectedAppointment.prescriptionSuggestions.rationale} ${selectedAppointment.prescriptionSuggestions.cautions.join(" ")}`.trim(),
-      medicationsText: suggestedMedicationLines || current.medicationsText
+      diagnosis: current.diagnosis || suggestionDraft.diagnosis,
+      doctorNotes: current.doctorNotes || suggestionDraft.doctorNotes,
     }));
+    setMedicationRows(suggestionDraft.medications.length ? suggestionDraft.medications : [emptyMedicationRow()]);
+  }
+
+  function acceptAutocomplete(field: "diagnosis" | "doctorNotes") {
+    const targetValue = suggestionDraft[field];
+    if (!targetValue) {
+      return;
+    }
+
+    setPrescriptionForm((current) => ({
+      ...current,
+      [field]: targetValue
+    }));
+  }
+
+  function handleAutocompleteKeyDown(
+    event: KeyboardEvent<HTMLTextAreaElement>,
+    field: "diagnosis" | "doctorNotes"
+  ) {
+    const previewByField = {
+      diagnosis: diagnosisPreview,
+      doctorNotes: doctorNotesPreview
+    };
+
+    if (event.key === "Tab" && previewByField[field]) {
+      event.preventDefault();
+      acceptAutocomplete(field);
+    }
   }
 
   function useCurrentLocation() {
@@ -215,9 +315,61 @@ export default function DoctorPage() {
       setClinicForm((current) => ({
         ...current,
         latitude: position.coords.latitude.toFixed(6),
-        longitude: position.coords.longitude.toFixed(6)
+      longitude: position.coords.longitude.toFixed(6)
       }));
     });
+  }
+
+  function updateMedicationRow(index: number, patch: Partial<MedicationRow>) {
+    setMedicationRows((current) =>
+      current.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row))
+    );
+  }
+
+  function toggleTiming(index: number, timing: TimingValue) {
+    setMedicationRows((current) =>
+      current.map((row, rowIndex) => {
+        if (rowIndex !== index) return row;
+        return {
+          ...row,
+          timing: row.timing.includes(timing)
+            ? row.timing.filter((item) => item !== timing)
+            : [...row.timing, timing]
+        };
+      })
+    );
+  }
+
+  function addMedicationRow() {
+    setMedicationRows((current) => [...current, emptyMedicationRow()]);
+  }
+
+  function removeMedicationRow(index: number) {
+    setMedicationRows((current) => (current.length === 1 ? [emptyMedicationRow()] : current.filter((_, rowIndex) => rowIndex !== index)));
+  }
+
+  function getMedicineMatches(value: string) {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+      return MEDICINE_OPTIONS.slice(0, 6);
+    }
+
+    return MEDICINE_OPTIONS.filter((item) => item.toLowerCase().includes(normalized)).slice(0, 6);
+  }
+
+  function medicinePreview(value: string) {
+    const match = getMedicineMatches(value)[0];
+    if (!match) return "";
+    if (!value) return match;
+    return match.toLowerCase().startsWith(value.toLowerCase()) ? match.slice(value.length) : "";
+  }
+
+  function acceptMedicinePreview(index: number) {
+    const row = medicationRows[index];
+    if (!row) return;
+    const match = getMedicineMatches(row.name)[0];
+    if (!match) return;
+    updateMedicationRow(index, { name: match });
   }
 
   if (!dashboard) {
@@ -372,12 +524,85 @@ export default function DoctorPage() {
             {selectedAppointment.prescriptionSuggestions.cautions.map((item, index) => (
               <p key={`${selectedAppointment.id}-caution-${index}`}>Caution: {item}</p>
             ))}
+            <p>Tip: press Tab inside the prescription fields to accept the suggested preview.</p>
             <button type="button" className="ghost" onClick={useSuggestedDraft}>Use suggested draft</button>
           </div>
         ) : null}
-        <textarea rows={4} placeholder="Diagnosis notes" value={prescriptionForm.diagnosis} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, diagnosis: e.target.value })} />
-        <textarea rows={4} placeholder="Doctor notes" value={prescriptionForm.doctorNotes} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, doctorNotes: e.target.value })} />
-        <textarea rows={5} placeholder="One medication per line: name | dosage | schedule" value={prescriptionForm.medicationsText} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, medicationsText: e.target.value })} />
+        <textarea rows={4} placeholder="Diagnosis notes" value={prescriptionForm.diagnosis} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, diagnosis: e.target.value })} onKeyDown={(e) => handleAutocompleteKeyDown(e, "diagnosis")} />
+        {diagnosisPreview ? <p className="muted">Tab to autocomplete: {diagnosisPreview}</p> : null}
+        <textarea rows={4} placeholder="Doctor notes" value={prescriptionForm.doctorNotes} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, doctorNotes: e.target.value })} onKeyDown={(e) => handleAutocompleteKeyDown(e, "doctorNotes")} />
+        {doctorNotesPreview ? <p className="muted">Tab to autocomplete: {doctorNotesPreview}</p> : null}
+        <div className="prescription-grid prescription-grid-header">
+          <span>Tablet Name</span>
+          <span>Dosage</span>
+          <span>Timing</span>
+          <span>Food</span>
+          <span>Action</span>
+        </div>
+        {medicationRows.map((row, index) => {
+          const preview = medicinePreview(row.name);
+          const matches = getMedicineMatches(row.name);
+          return (
+            <div className="prescription-grid prescription-grid-row" key={`med-row-${index}`}>
+              <div className="medicine-cell">
+                <input
+                  placeholder="Tablet name"
+                  value={row.name}
+                  onChange={(e) => updateMedicationRow(index, { name: e.target.value })}
+                  onKeyDown={(event) => {
+                    if (event.key === "Tab" && preview) {
+                      event.preventDefault();
+                      acceptMedicinePreview(index);
+                    }
+                  }}
+                />
+                {preview ? <p className="muted">Tab to autocomplete: {preview}</p> : null}
+                {matches.length ? (
+                  <div className="autocomplete-list">
+                    {matches.map((item) => (
+                      <button
+                        key={`${index}-${item}`}
+                        type="button"
+                        className="autocomplete-item"
+                        onClick={() => updateMedicationRow(index, { name: item })}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <input
+                placeholder="500mg / 1 tablet"
+                value={row.dosage}
+                onChange={(e) => updateMedicationRow(index, { dosage: e.target.value })}
+              />
+              <div className="timing-pills">
+                {TIMING_OPTIONS.map((item) => (
+                  <button
+                    key={`${index}-${item.value}`}
+                    type="button"
+                    className={row.timing.includes(item.value) ? "ghost timing-pill active-pill" : "ghost timing-pill"}
+                    onClick={() => toggleTiming(index, item.value)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+              <select
+                value={row.foodRelation}
+                onChange={(e) => updateMedicationRow(index, { foodRelation: e.target.value as MedicationRow["foodRelation"] })}
+              >
+                <option value="before_food">Before Food</option>
+                <option value="after_food">After Food</option>
+              </select>
+              <button type="button" className="ghost" onClick={() => removeMedicationRow(index)}>
+                Remove
+              </button>
+            </div>
+          );
+        })}
+        <button type="button" className="ghost" onClick={addMedicationRow}>Add medicine row</button>
         <button disabled={dashboard.doctor.verification_status !== "verified"} onClick={savePrescription}>Store encrypted prescription</button>
       </section>
     </main>

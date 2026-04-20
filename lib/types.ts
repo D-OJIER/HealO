@@ -73,7 +73,9 @@ export type DoctorRecommendation = {
 export type MedicationItem = {
   name: string;
   dosage: string;
-  schedule: string;
+  timing: Array<"morning" | "afternoon" | "evening" | "night">;
+  foodRelation: "before_food" | "after_food";
+  schedule?: string;
 };
 
 export type AuthUser = {
@@ -180,6 +182,8 @@ export type SessionRecord = {
 export type PrescriptionSuggestionItem = {
   name: string;
   dosage: string;
+  timing: MedicationItem["timing"];
+  foodRelation: MedicationItem["foodRelation"];
   schedule: string;
   reason: string;
   blocked: boolean;

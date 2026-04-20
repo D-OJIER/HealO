@@ -66,6 +66,13 @@ Batch 2 doctors:
 - `farah@doctor.local`  Reg: `REG-5005`
 - `karthik@doctor.local`  Reg: `REG-6006`
 
+Extra verified signup test identities:
+
+- `Dr. Ananya Patel`  Reg: `REG-7007`
+- `Dr. Raghav Bhat`  Reg: `REG-8008`
+- `Dr. Leena Thomas`  Reg: `REG-9009`
+- `Dr. Siddharth Kulkarni`  Reg: `REG-1010`
+
 ## AI check
 
 After adding your Gemini key, the app uses Gemini for:

@@ -94,9 +94,13 @@ export async function GET(request: Request) {
       prescriptions: (prescriptionRows || []).map((prescription) => {
         const doctorUserId = doctorUserIds.get(prescription.doctor_id as string) || "";
         const decrypted = decryptPrescriptionFields(prescription);
+        const appointment = appointmentRows.find((item) => item.id === prescription.appointment_id);
+        const slot = appointment ? slotsById.get(appointment.slot_id as string) : null;
         return {
           id: prescription.id,
           doctorName: doctorNames.get(doctorUserId) || "Doctor",
+          prescribedAt: prescription.created_at,
+          consultationAt: slot?.start_time || null,
           diagnosis: decrypted.diagnosis,
           medications: decrypted.medications,
           notes: decrypted.notes
