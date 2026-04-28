@@ -1,0 +1,111 @@
+auth_users (
+  id text primary key,
+  email text unique,
+  password_hash text,
+  created_at timestamp
+)
+
+users (
+  id text primary key,
+  name text,
+  email text unique,
+  role enum('patient','doctor','admin'),
+  phone text,
+  created_at timestamp
+)
+
+registered_doctors (
+  id text primary key,
+  name text,
+  registration_number_hash text unique,
+  specialty text,
+  created_at timestamp
+)
+
+doctors (
+  id text primary key,
+  user_id text unique references users.id,
+  specialty text,
+  verification_status enum('pending','verified','rejected'),
+  rating float,
+  location_lat float,
+  location_lng float,
+  location_label text,
+  created_at timestamp
+)
+
+clinics (
+  id text primary key,
+  name text,
+  address text,
+  location_lat float,
+  location_lng float,
+  created_at timestamp
+)
+
+doctor_clinics (
+  doctor_id text references doctors.id,
+  clinic_id text references clinics.id
+)
+
+doctor_slots (
+  id text primary key,
+  doctor_id text references doctors.id,
+  clinic_id text references clinics.id,
+  start_time timestamp,
+  end_time timestamp,
+  created_at timestamp
+)
+
+symptoms (
+  id text primary key,
+  patient_id text references users.id,
+  description text,
+  created_at timestamp
+)
+
+appointments (
+  id text primary key,
+  patient_id text references users.id,
+  doctor_id text references doctors.id,
+  slot_id text references doctor_slots.id,
+  clinic_id text references clinics.id,
+  symptom_id text nullable references symptoms.id,
+  status enum('pending','accepted','rejected','cancelled','completed'),
+  created_at timestamp
+)
+
+prescriptions (
+  id text primary key,
+  appointment_id text references appointments.id,
+  doctor_id text references doctors.id,
+  patient_id text references users.id,
+  diagnosis text,
+  medications json,
+  doctor_notes text,
+  created_at timestamp
+)
+
+reviews (
+  id text primary key,
+  doctor_id text references doctors.id,
+  patient_id text references users.id,
+  rating int,
+  comment text,
+  created_at timestamp
+)
+
+medication_reminders (
+  id text primary key,
+  patient_id text references users.id,
+  medication_name text,
+  schedule text,
+  enabled boolean,
+  created_at timestamp
+)
+
+sessions (
+  id text primary key,
+  user_id text references users.id,
+  created_at timestamp
+)

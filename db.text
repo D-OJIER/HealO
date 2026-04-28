@@ -1,0 +1,615 @@
+Yes. Run this in the Supabase SQL editor after your migration.
+
+It creates:
+
+- 3 patients
+- 3 verified doctors
+- 3 clinics
+- doctor-clinic links
+- a mix of open and booked slots
+- 2 sample appointments
+- reviews
+- medication reminders
+
+Test logins created by this seed:
+
+- `riya@testclinic.com` / `TestPass123!`
+- `aman@testclinic.com` / `TestPass123!`
+- `sana@testclinic.com` / `TestPass123!`
+- `maya@doctor.test` / `TestPass123!`
+- `arjun@doctor.test` / `TestPass123!`
+- `nisha@doctor.test` / `TestPass123!`
+
+SQL:
+
+```sql
+begin;
+
+create extension if not exists pgcrypto;
+
+-- Optional cleanup if you want to re-run safely
+delete from public.medication_reminders
+where patient_id in (
+  '11111111-1111-1111-1111-111111111111',
+  '22222222-2222-2222-2222-222222222222',
+  '33333333-3333-3333-3333-333333333333'
+);
+
+delete from public.reviews
+where patient_id in (
+  '11111111-1111-1111-1111-111111111111',
+  '22222222-2222-2222-2222-222222222222',
+  '33333333-3333-3333-3333-333333333333'
+);
+
+delete from public.appointments
+where patient_id in (
+  '11111111-1111-1111-1111-111111111111',
+  '22222222-2222-2222-2222-222222222222',
+  '33333333-3333-3333-3333-333333333333'
+);
+
+delete from public.doctor_slots
+where id in (
+  '70000000-0000-0000-0000-000000000001',
+  '70000000-0000-0000-0000-000000000002',
+  '70000000-0000-0000-0000-000000000003',
+  '70000000-0000-0000-0000-000000000004',
+  '70000000-0000-0000-0000-000000000005',
+  '70000000-0000-0000-0000-000000000006',
+  '70000000-0000-0000-0000-000000000007',
+  '70000000-0000-0000-0000-000000000008',
+  '70000000-0000-0000-0000-000000000009'
+);
+
+delete from public.doctor_clinics
+where clinic_id in (
+  '60000000-0000-0000-0000-000000000001',
+  '60000000-0000-0000-0000-000000000002',
+  '60000000-0000-0000-0000-000000000003'
+);
+
+delete from public.clinics
+where id in (
+  '60000000-0000-0000-0000-000000000001',
+  '60000000-0000-0000-0000-000000000002',
+  '60000000-0000-0000-0000-000000000003'
+);
+
+delete from public.registered_doctors
+where id in (
+  '50000000-0000-0000-0000-000000000001',
+  '50000000-0000-0000-0000-000000000002',
+  '50000000-0000-0000-0000-000000000003'
+);
+
+delete from auth.users
+where id in (
+  '11111111-1111-1111-1111-111111111111',
+  '22222222-2222-2222-2222-222222222222',
+  '33333333-3333-3333-3333-333333333333',
+  '44444444-4444-4444-4444-444444444444',
+  '55555555-5555-5555-5555-555555555555',
+  '66666666-6666-6666-6666-666666666666'
+);
+
+-- Trusted doctor registry
+insert into public.registered_doctors (
+  id,
+  name,
+  registration_number,
+  registration_number_hash,
+  specialty
+) values
+(
+  '50000000-0000-0000-0000-000000000001',
+  'Dr. Maya Shah',
+  null,
+  encode(digest('REG-1001', 'sha256'), 'hex'),
+  'Cardiology'
+),
+(
+  '50000000-0000-0000-0000-000000000002',
+  'Dr. Arjun Menon',
+  null,
+  encode(digest('REG-2002', 'sha256'), 'hex'),
+  'Dermatology'
+),
+(
+  '50000000-0000-0000-0000-000000000003',
+  'Dr. Nisha Rao',
+  null,
+  encode(digest('REG-3003', 'sha256'), 'hex'),
+  'General Medicine'
+)
+on conflict (id) do update
+set
+  name = excluded.name,
+  registration_number_hash = excluded.registration_number_hash,
+  specialty = excluded.specialty;
+
+-- Auth users
+insert into auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at,
+  confirmation_token,
+  email_change,
+  email_change_token_new,
+  recovery_token
+) values
+(
+  '00000000-0000-0000-0000-000000000000',
+  '11111111-1111-1111-1111-111111111111',
+  'authenticated',
+  'authenticated',
+  'riya@testclinic.com',
+  crypt('TestPass123!', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"role":"patient","name":"Riya Sharma","phone":"9876543210"}',
+  now(),
+  now(),
+  '',
+  '',
+  '',
+  ''
+),
+(
+  '00000000-0000-0000-0000-000000000000',
+  '22222222-2222-2222-2222-222222222222',
+  'authenticated',
+  'authenticated',
+  'aman@testclinic.com',
+  crypt('TestPass123!', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"role":"patient","name":"Aman Verma","phone":"9876500011"}',
+  now(),
+  now(),
+  '',
+  '',
+  '',
+  ''
+),
+(
+  '00000000-0000-0000-0000-000000000000',
+  '33333333-3333-3333-3333-333333333333',
+  'authenticated',
+  'authenticated',
+  'sana@testclinic.com',
+  crypt('TestPass123!', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"role":"patient","name":"Sana Iqbal","phone":"9876500022"}',
+  now(),
+  now(),
+  '',
+  '',
+  '',
+  ''
+),
+(
+  '00000000-0000-0000-0000-000000000000',
+  '44444444-4444-4444-4444-444444444444',
+  'authenticated',
+  'authenticated',
+  'maya@doctor.test',
+  crypt('TestPass123!', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"role":"doctor","name":"Dr. Maya Shah","phone":"9000001001","registration_number":"REG-1001"}',
+  now(),
+  now(),
+  '',
+  '',
+  '',
+  ''
+),
+(
+  '00000000-0000-0000-0000-000000000000',
+  '55555555-5555-5555-5555-555555555555',
+  'authenticated',
+  'authenticated',
+  'arjun@doctor.test',
+  crypt('TestPass123!', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"role":"doctor","name":"Dr. Arjun Menon","phone":"9000002002","registration_number":"REG-2002"}',
+  now(),
+  now(),
+  '',
+  '',
+  '',
+  ''
+),
+(
+  '00000000-0000-0000-0000-000000000000',
+  '66666666-6666-6666-6666-666666666666',
+  'authenticated',
+  'authenticated',
+  'nisha@doctor.test',
+  crypt('TestPass123!', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"role":"doctor","name":"Dr. Nisha Rao","phone":"9000003003","registration_number":"REG-3003"}',
+  now(),
+  now(),
+  '',
+  '',
+  '',
+  ''
+)
+on conflict (id) do nothing;
+
+-- Remove plaintext registration number from auth metadata after trigger has run
+update auth.users
+set raw_user_meta_data = raw_user_meta_data - 'registration_number'
+where id in (
+  '44444444-4444-4444-4444-444444444444',
+  '55555555-5555-5555-5555-555555555555',
+  '66666666-6666-6666-6666-666666666666'
+);
+
+-- Clinics
+insert into public.clinics (
+  id,
+  name,
+  address,
+  location_lat,
+  location_lng
+) values
+(
+  '60000000-0000-0000-0000-000000000001',
+  'HeartCare Clinic',
+  '12 Residency Road, Bengaluru',
+  12.9716,
+  77.5946
+),
+(
+  '60000000-0000-0000-0000-000000000002',
+  'SkinFirst Center',
+  '44 MG Road, Bengaluru',
+  12.9758,
+  77.6055
+),
+(
+  '60000000-0000-0000-0000-000000000003',
+  'WellSpring Family Clinic',
+  '7 Indiranagar 100 Feet Road, Bengaluru',
+  12.9784,
+  77.6408
+)
+on conflict (id) do update
+set
+  name = excluded.name,
+  address = excluded.address,
+  location_lat = excluded.location_lat,
+  location_lng = excluded.location_lng;
+
+-- Link doctors to clinics
+insert into public.doctor_clinics (doctor_id, clinic_id)
+select d.id, '60000000-0000-0000-0000-000000000001'::uuid
+from public.doctors d
+where d.user_id = '44444444-4444-4444-4444-444444444444'
+on conflict do nothing;
+
+insert into public.doctor_clinics (doctor_id, clinic_id)
+select d.id, '60000000-0000-0000-0000-000000000002'::uuid
+from public.doctors d
+where d.user_id = '55555555-5555-5555-5555-555555555555'
+on conflict do nothing;
+
+insert into public.doctor_clinics (doctor_id, clinic_id)
+select d.id, '60000000-0000-0000-0000-000000000003'::uuid
+from public.doctors d
+where d.user_id = '66666666-6666-6666-6666-666666666666'
+on conflict do nothing;
+
+-- Future slots
+insert into public.doctor_slots (
+  id,
+  doctor_id,
+  clinic_id,
+  start_time,
+  end_time
+)
+select
+  '70000000-0000-0000-0000-000000000001',
+  d.id,
+  '60000000-0000-0000-0000-000000000001',
+  now() + interval '1 day' + interval '9 hour',
+  now() + interval '1 day' + interval '9 hour 20 minute'
+from public.doctors d
+where d.user_id = '44444444-4444-4444-4444-444444444444'
+on conflict (id) do nothing;
+
+insert into public.doctor_slots (
+  id,
+  doctor_id,
+  clinic_id,
+  start_time,
+  end_time
+)
+select
+  '70000000-0000-0000-0000-000000000002',
+  d.id,
+  '60000000-0000-0000-0000-000000000001',
+  now() + interval '1 day' + interval '10 hour',
+  now() + interval '1 day' + interval '10 hour 20 minute'
+from public.doctors d
+where d.user_id = '44444444-4444-4444-4444-444444444444'
+on conflict (id) do nothing;
+
+insert into public.doctor_slots (
+  id,
+  doctor_id,
+  clinic_id,
+  start_time,
+  end_time
+)
+select
+  '70000000-0000-0000-0000-000000000003',
+  d.id,
+  '60000000-0000-0000-0000-000000000001',
+  now() + interval '2 day' + interval '11 hour',
+  now() + interval '2 day' + interval '11 hour 20 minute'
+from public.doctors d
+where d.user_id = '44444444-4444-4444-4444-444444444444'
+on conflict (id) do nothing;
+
+insert into public.doctor_slots (
+  id,
+  doctor_id,
+  clinic_id,
+  start_time,
+  end_time
+)
+select
+  '70000000-0000-0000-0000-000000000004',
+  d.id,
+  '60000000-0000-0000-0000-000000000002',
+  now() + interval '1 day' + interval '14 hour',
+  now() + interval '1 day' + interval '14 hour 20 minute'
+from public.doctors d
+where d.user_id = '55555555-5555-5555-5555-555555555555'
+on conflict (id) do nothing;
+
+insert into public.doctor_slots (
+  id,
+  doctor_id,
+  clinic_id,
+  start_time,
+  end_time
+)
+select
+  '70000000-0000-0000-0000-000000000005',
+  d.id,
+  '60000000-0000-0000-0000-000000000002',
+  now() + interval '2 day' + interval '15 hour',
+  now() + interval '2 day' + interval '15 hour 20 minute'
+from public.doctors d
+where d.user_id = '55555555-5555-5555-5555-555555555555'
+on conflict (id) do nothing;
+
+insert into public.doctor_slots (
+  id,
+  doctor_id,
+  clinic_id,
+  start_time,
+  end_time
+)
+select
+  '70000000-0000-0000-0000-000000000006',
+  d.id,
+  '60000000-0000-0000-0000-000000000002',
+  now() + interval '3 day' + interval '16 hour',
+  now() + interval '3 day' + interval '16 hour 20 minute'
+from public.doctors d
+where d.user_id = '55555555-5555-5555-5555-555555555555'
+on conflict (id) do nothing;
+
+insert into public.doctor_slots (
+  id,
+  doctor_id,
+  clinic_id,
+  start_time,
+  end_time
+)
+select
+  '70000000-0000-0000-0000-000000000007',
+  d.id,
+  '60000000-0000-0000-0000-000000000003',
+  now() + interval '1 day' + interval '8 hour',
+  now() + interval '1 day' + interval '8 hour 20 minute'
+from public.doctors d
+where d.user_id = '66666666-6666-6666-6666-666666666666'
+on conflict (id) do nothing;
+
+insert into public.doctor_slots (
+  id,
+  doctor_id,
+  clinic_id,
+  start_time,
+  end_time
+)
+select
+  '70000000-0000-0000-0000-000000000008',
+  d.id,
+  '60000000-0000-0000-0000-000000000003',
+  now() + interval '2 day' + interval '9 hour',
+  now() + interval '2 day' + interval '9 hour 20 minute'
+from public.doctors d
+where d.user_id = '66666666-6666-6666-6666-666666666666'
+on conflict (id) do nothing;
+
+insert into public.doctor_slots (
+  id,
+  doctor_id,
+  clinic_id,
+  start_time,
+  end_time
+)
+select
+  '70000000-0000-0000-0000-000000000009',
+  d.id,
+  '60000000-0000-0000-0000-000000000003',
+  now() + interval '3 day' + interval '10 hour',
+  now() + interval '3 day' + interval '10 hour 20 minute'
+from public.doctors d
+where d.user_id = '66666666-6666-6666-6666-666666666666'
+on conflict (id) do nothing;
+
+-- Sample appointments using two of the slots, leaving others open
+insert into public.appointments (
+  id,
+  patient_id,
+  doctor_id,
+  slot_id,
+  clinic_id,
+  status
+)
+select
+  '80000000-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  d.id,
+  '70000000-0000-0000-0000-000000000002',
+  '60000000-0000-0000-0000-000000000001',
+  'pending'::public.appointment_status
+from public.doctors d
+where d.user_id = '44444444-4444-4444-4444-444444444444'
+on conflict (id) do nothing;
+
+insert into public.appointments (
+  id,
+  patient_id,
+  doctor_id,
+  slot_id,
+  clinic_id,
+  status
+)
+select
+  '80000000-0000-0000-0000-000000000002',
+  '22222222-2222-2222-2222-222222222222',
+  d.id,
+  '70000000-0000-0000-0000-000000000004',
+  '60000000-0000-0000-0000-000000000002',
+  'accepted'::public.appointment_status
+from public.doctors d
+where d.user_id = '55555555-5555-5555-5555-555555555555'
+on conflict (id) do nothing;
+
+-- Reviews for ratings
+insert into public.reviews (
+  id,
+  doctor_id,
+  patient_id,
+  rating,
+  comment
+)
+select
+  '90000000-0000-0000-0000-000000000001',
+  d.id,
+  '11111111-1111-1111-1111-111111111111',
+  5,
+  'Very clear consultation and helpful follow-up.'
+from public.doctors d
+where d.user_id = '44444444-4444-4444-4444-444444444444'
+on conflict (id) do nothing;
+
+insert into public.reviews (
+  id,
+  doctor_id,
+  patient_id,
+  rating,
+  comment
+)
+select
+  '90000000-0000-0000-0000-000000000002',
+  d.id,
+  '22222222-2222-2222-2222-222222222222',
+  4,
+  'Good experience and easy booking.'
+from public.doctors d
+where d.user_id = '44444444-4444-4444-4444-444444444444'
+on conflict (id) do nothing;
+
+insert into public.reviews (
+  id,
+  doctor_id,
+  patient_id,
+  rating,
+  comment
+)
+select
+  '90000000-0000-0000-0000-000000000003',
+  d.id,
+  '33333333-3333-3333-3333-333333333333',
+  5,
+  'Dermatology treatment worked well.'
+from public.doctors d
+where d.user_id = '55555555-5555-5555-5555-555555555555'
+on conflict (id) do nothing;
+
+insert into public.reviews (
+  id,
+  doctor_id,
+  patient_id,
+  rating,
+  comment
+)
+select
+  '90000000-0000-0000-0000-000000000004',
+  d.id,
+  '11111111-1111-1111-1111-111111111111',
+  4,
+  'General consultation was smooth.'
+from public.doctors d
+where d.user_id = '66666666-6666-6666-6666-666666666666'
+on conflict (id) do nothing;
+
+-- Medication reminders
+insert into public.medication_reminders (
+  id,
+  patient_id,
+  medication_name,
+  schedule,
+  enabled
+) values
+(
+  '91000000-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  'Paracetamol 650mg',
+  '08:00,14:00,21:00',
+  true
+),
+(
+  '91000000-0000-0000-0000-000000000002',
+  '22222222-2222-2222-2222-222222222222',
+  'Cetirizine 10mg',
+  '22:00',
+  true
+)
+on conflict (id) do nothing;
+
+commit;
+```
+
+A couple of important notes:
+
+- This seeds `auth.users`, so you can log in with those accounts.
+- I did not seed `symptoms` and `prescriptions` here, because your app stores those using custom AES-256-GCM application encryption, not plain SQL text. If you insert plaintext there, your UI decryption will fail.
+- After running this, sign in as a patient or doctor and create symptoms/prescriptions through the app to generate real encrypted PHI rows.
+
+If you want, I can also give you a second SQL block that adds:
+- one unverified doctor
+- more reviews for better rating spread
+- past completed appointments for richer dashboard testing
