@@ -23,8 +23,6 @@ GEMINI_API_KEY=
 GEMINI_MODEL=gemini-3-flash-preview
 ```
 
-Only `APP_AES_SECRET` and `GEMINI_API_KEY` matter in the current local-data mode. Supabase values can remain in place but are not required for the app to function.
-
 ## Local data
 
 Persistent demo data is stored in [data/local-db.json](/home/alfredreijophilominf/Basic/clg/HealO/data/local-db.json).
